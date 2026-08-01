@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="Common\Enums\" />
     <Folder Include="Entities\" />
-    <Folder Include="Settings\" />
   </ItemGroup>
 
 </Project>
