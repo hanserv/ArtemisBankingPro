@@ -1,4 +1,6 @@
-﻿using ArtemisBankingPro.Infrastructure.Persistence.Contexts;
+﻿using ArtemisBankingPro.Core.Domain.Interfaces;
+using ArtemisBankingPro.Infrastructure.Persistence.Contexts;
+using ArtemisBankingPro.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +25,7 @@ namespace ArtemisBankingPro.Infrastructure.Persistence
             #endregion
 
             #region Repositories
-            //services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             #endregion
         }
     }
