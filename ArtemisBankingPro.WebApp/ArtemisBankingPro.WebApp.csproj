@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArtemisBankingPro.Core.Application\ArtemisBankingPro.Core.Application.csproj" />
+    <ProjectReference Include="..\ArtemisBankingPro.Core.Domain\ArtemisBankingPro.Core.Domain.csproj" />
+    <ProjectReference Include="..\ArtemisBankingPro.Infrastructure.Identity\ArtemisBankingPro.Infrastructure.Identity.csproj" />
+    <ProjectReference Include="..\ArtemisBankingPro.Infrastructure.Persistence\ArtemisBankingPro.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\ArtemisBankingPro.Infrastructure.Shared\ArtemisBankingPro.Infrastructure.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,1 +1,19 @@
-<Solution />
+<Solution>
+  <Folder Name="/Source/" />
+  <Folder Name="/Source/Core/">
+    <Project Path="ArtemisBankingPro.Core.Application/ArtemisBankingPro.Core.Application.csproj" Id="7f1bad40-dd68-4c8e-addd-ab30965ef7c5" />
+    <Project Path="ArtemisBankingPro.Core.Domain/ArtemisBankingPro.Core.Domain.csproj" Id="dd337741-0177-4771-a7d7-bbd8f5aa590a" />
+  </Folder>
+  <Folder Name="/Source/Infrastructure/">
+    <Project Path="ArtemisBankingPro.Infrastructure.Identity/ArtemisBankingPro.Infrastructure.Identity.csproj" Id="84f0ef7d-4c9f-4159-8586-b31153f87eab" />
+    <Project Path="ArtemisBankingPro.Infrastructure.Persistence/ArtemisBankingPro.Infrastructure.Persistence.csproj" Id="3e47e6de-a36f-4b07-bd24-2acfc6c7d77e" />
+    <Project Path="ArtemisBankingPro.Infrastructure.Shared/ArtemisBankingPro.Infrastructure.Shared.csproj" Id="22f32fbe-f3fe-4641-8377-744a47f2afa6" />
+  </Folder>
+  <Folder Name="/Source/Presentation/" />
+  <Folder Name="/Source/Presentation/Api/">
+    <Project Path="ArtemisBankingPro.Api/ArtemisBankingPro.Api.csproj" Id="5d13a859-ae33-46e0-b6b2-6978f7e89b79" />
+  </Folder>
+  <Folder Name="/Source/Presentation/WebApp/">
+    <Project Path="ArtemisBankingPro.WebApp/ArtemisBankingPro.WebApp.csproj" Id="d38cb162-512b-4657-870c-198b73a93747" />
+  </Folder>
+</Solution>
