@@ -1,4 +1,6 @@
+using ArtemisBankingPro.Infrastructure.Identity;
 using ArtemisBankingPro.Infrastructure.Persistence;
+using ArtemisBankingPro.Infrastructure.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
 builder.Services.AddPersistenceLayer(builder.Configuration);
+builder.Services.AddSharedLayer(builder.Configuration);
+builder.Services.AddIdentityLayerForWebApp(builder.Configuration);
 
 var app = builder.Build();
 
@@ -20,6 +24,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
