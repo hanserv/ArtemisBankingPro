@@ -1,5 +1,8 @@
-﻿using ArtemisBankingPro.Infrastructure.Identity.Contexts;
+﻿using ArtemisBankingPro.Core.Application.Interfaces;
+using ArtemisBankingPro.Infrastructure.Identity.Contexts;
 using ArtemisBankingPro.Infrastructure.Identity.Entities;
+using ArtemisBankingPro.Infrastructure.Identity.Seeds;
+using ArtemisBankingPro.Infrastructure.Identity.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -55,10 +58,27 @@ namespace ArtemisBankingPro.Infrastructure.Identity
             #endregion
 
             #region Services
+            services.AddScoped<IAccountServiceForWebApp,AccountServiceForWebApp>();
             #endregion
         }
 
         // api layer
+
+        public static async Task RunIdentitySeedAsync(this IServiceProvider service)
+        {
+            using var scope = service.CreateScope();
+            var servicesProvider = scope.ServiceProvider;
+
+            var userManager = servicesProvider.GetRequiredService<UserManager<AppUser>>();
+            var roleManager = servicesProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var savingsAccountService = servicesProvider.GetRequiredService<ISavingsAccountService>();
+
+            await DefaultRoles.SeedAsync(roleManager);
+            await DefaultAdminUser.SeedAsync(userManager);
+            await DefaultCommerceUser.SeedAsync(userManager);
+            await DefaultCashierUser.SeedAsync(userManager);
+            await DefaultClientUser.SeedAsync(userManager,savingsAccountService);
+        }
 
         #region Private Methods
         private static void GeneralConfiguration(IServiceCollection services, IConfiguration configuration)

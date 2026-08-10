@@ -1,0 +1,33 @@
+﻿@{
+	ViewData["Title"] = "Home Page";
+}
+
+<div>
+	@if (TempData["Message"] is string message)
+	{
+		<div class="row justify-content-center mt-2">
+			<div class="col-12">
+				<div class="alert alert-success alert-dismissible fade show shadow-sm text-center" role="alert">
+					<i class="bi bi-check-circle-fill me-2"></i> @message
+					<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+				</div>
+			</div>
+		</div>
+	}
+
+	<div class="bg-white border-start border-4 border-primary rounded shadow-sm px-3 py-2 mb-4">
+		<div class="d-flex align-items-center justify-content-between">
+			<div>
+				<h5 class="fs-5 fw-bold mb-0">
+					Client Home
+				</h5>
+				<small class="text-muted">
+					Welcome back
+				</small>
+			</div>
+
+			<i class="bi bi-house-door text-primary fs-4"></i>
+		</div>
+	</div>
+</div>
+

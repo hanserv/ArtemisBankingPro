@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using ArtemisBankingPro.Core.Application.Interfaces;
+using ArtemisBankingPro.Core.Application.Services;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,8 @@ namespace ArtemisBankingPro.Core.Application
             #endregion
 
             #region Services
+            services.AddScoped<IAccountNumberGenerator,AccountNumberGenerator>();
+            services.AddScoped<ISavingsAccountService,SavingsAccountService>();
             #endregion
         }
     }

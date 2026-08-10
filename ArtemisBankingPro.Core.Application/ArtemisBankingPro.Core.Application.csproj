@@ -10,7 +10,6 @@
     <Folder Include="Features\" />
     <Folder Include="Helpers\" />
     <Folder Include="Mappings\DtosVms\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>

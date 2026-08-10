@@ -10,5 +10,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Entities
         public required bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public int? CommerceId { get; set; }
+
+        public DateTime? PasswordResetTokenGeneratedAt { get; set; }
     }
 }
