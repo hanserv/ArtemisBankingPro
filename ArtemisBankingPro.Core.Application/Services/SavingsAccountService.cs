@@ -7,6 +7,7 @@ using ArtemisBankingPro.Core.Domain.Entities;
 using ArtemisBankingPro.Core.Domain.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ArtemisBankingPro.Core.Application.Services
 {
@@ -19,11 +20,12 @@ namespace ArtemisBankingPro.Core.Application.Services
         private readonly IBasicUserInfoService _basicUserInfoService;
         private readonly IMapper _mapper;
         private readonly IFinancialSummaryService _financialSummaryService;
+        private readonly ILogger<SavingsAccountService> _logger;
 
         public SavingsAccountService(ISavingsAccountRepository savingsAccountRepository, ITransactionRepository transactionRepository,
             IAccountNumberGenerator accountNumberGenerator, IUnitOfWork unitOfWork,
-            IBasicUserInfoService basicUserInfoService, IMapper mapper, 
-            IFinancialSummaryService financialSummaryService)
+            IBasicUserInfoService basicUserInfoService, IMapper mapper,
+            IFinancialSummaryService financialSummaryService, ILogger<SavingsAccountService> logger)
         {
             _savingsAccountRepository = savingsAccountRepository;
             _transactionRepository = transactionRepository;
@@ -32,6 +34,7 @@ namespace ArtemisBankingPro.Core.Application.Services
             _basicUserInfoService = basicUserInfoService;
             _mapper = mapper;
             _financialSummaryService = financialSummaryService;
+            _logger = logger;
         }
 
         public async Task<Result<SavingsAccountDto>> GetByIdAsync(int id)
@@ -249,6 +252,8 @@ namespace ArtemisBankingPro.Core.Application.Services
 
         public async Task<Result> CreateSecondaryAccountAsync(string clientId, decimal initialBalance, string createdByAdminId)
         {
+            _logger.LogInformation("Administrator {AdminId} initiated secondary account assignment for client {ClientId} with initial balance {InitialBalance:C}.",createdByAdminId, clientId, initialBalance);
+
             if (initialBalance < 0)
             {
                 return Result.Failure(error: "The initial balance cannot be negative.");
@@ -257,10 +262,13 @@ namespace ArtemisBankingPro.Core.Application.Services
             var validation = await ValidateClientForAssignmentAsync(clientId);
             if (!validation.IsSuccess)
             {
+                _logger.LogWarning("Secondary account assignment rejected for client {ClientId}: {Error}.", clientId, validation.Error);
+
                 return validation;
             }
 
             var accountNumber = await _accountNumberGenerator.GenerateAsync();
+            var hasInitialCredit = initialBalance > 0;
 
             var account = new SavingsAccount
             {
@@ -278,7 +286,7 @@ namespace ArtemisBankingPro.Core.Application.Services
             {
                 await _savingsAccountRepository.AddAsync(account);
 
-                if (initialBalance > 0)
+                if (hasInitialCredit)
                 {
                     await _transactionRepository.AddAsync(new Transaction
                     {
@@ -295,11 +303,18 @@ namespace ArtemisBankingPro.Core.Application.Services
                 }
             });
 
+            _logger.LogInformation(hasInitialCredit
+                ? "Secondary account {AccountNumber} assigned to client {ClientId} by administrator {AdminId}, opened with an initial credit of {InitialBalance:C}."
+                : "Secondary account {AccountNumber} assigned to client {ClientId} by administrator {AdminId} with zero balance.", account.AccountNumber, clientId, createdByAdminId, initialBalance);
+
+
             return Result.Success(message: "The secondary savings account has been created successfully.");
         }
 
         public async Task<Result> CancelSecondaryAccountAsync(int accountId, string performedByAdminId)
         {
+            _logger.LogInformation("Administrator {AdminId} initiated cancellation of account {AccountId}.", performedByAdminId, accountId);
+
             var account = await _savingsAccountRepository.GetByIdAsync(accountId);
             if (account is null)
             {
@@ -319,12 +334,16 @@ namespace ArtemisBankingPro.Core.Application.Services
             var principalAccount = await _savingsAccountRepository.GetPrincipalAccountByClientIdAsync(account.ClientId);
             if (principalAccount is null)
             {
+                _logger.LogWarning("Cancellation of secondary account {AccountNumber} failed: client {ClientId} has no active principal account to receive the funds.", account.AccountNumber, account.ClientId);
                 return Result.Failure(error: "It is not possible to cancel the account because the client does not have an active principal account to receive the funds.");
             }
 
+            var transferredAmount = account.Balance;
+            var hasBalanceToTransfer = transferredAmount > 0;
+
             await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                if (account.Balance > 0)
+                if (hasBalanceToTransfer)
                 {
                     var amountToTransfer = account.Balance;
 
@@ -362,6 +381,13 @@ namespace ArtemisBankingPro.Core.Application.Services
                 account.Status = SavingsAccountStatus.Cancelled;
                 await _savingsAccountRepository.UpdateAsync(account);
             });
+
+            if (hasBalanceToTransfer)
+            {
+                _logger.LogInformation("Transfer of {TransferredAmount:C} completed from {FromAccount} to {ToAccount} as part of cancellation.", transferredAmount, account.AccountNumber, principalAccount.AccountNumber);
+            }
+
+            _logger.LogInformation("Secondary account {AccountNumber} cancelled by administrator {AdminId}.", account.AccountNumber, performedByAdminId);
 
             return Result.Success(message: "The secondary savings account has been cancelled successfully.");
         }
