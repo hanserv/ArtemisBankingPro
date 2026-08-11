@@ -30,6 +30,7 @@ namespace ArtemisBankingPro.Infrastructure.Persistence
             services.AddScoped<ISavingsAccountRepository,SavingsAccountRepository>();
             services.AddScoped<ILoanRepository,LoanRepository>();
             services.AddScoped<ITransactionRepository,TransactionRepository>();
+            services.AddScoped<ICreditCardRepository,CreditCardRepository>();
             #endregion
         }
     }

@@ -3,7 +3,6 @@ using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.User;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Core.Application.ViewModels.User;
-using ArtemisBankingPro.Core.Domain.Common.Enums;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

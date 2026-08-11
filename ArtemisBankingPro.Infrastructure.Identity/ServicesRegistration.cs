@@ -59,6 +59,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity
 
             #region Services
             services.AddScoped<IAccountServiceForWebApp,AccountServiceForWebApp>();
+            services.AddScoped<IBasicUserInfoService,BasicUserInfoService>();
             #endregion
         }
 

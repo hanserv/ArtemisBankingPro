@@ -22,6 +22,8 @@ namespace ArtemisBankingPro.Core.Application
             #region Services
             services.AddScoped<IAccountNumberGenerator,AccountNumberGenerator>();
             services.AddScoped<ISavingsAccountService,SavingsAccountService>();
+            services.AddScoped<IFinancialSummaryService,FinancialSummaryService>();
+            services.AddScoped<ITransactionService,TransactionService>();
             #endregion
         }
     }

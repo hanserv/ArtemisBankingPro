@@ -11,6 +11,7 @@ namespace ArtemisBankingPro.Core.Domain.Entities
         public required SavingsAccountType Type { get; set; }
         public required SavingsAccountStatus Status { get; set; } 
         public required DateTime CreatedAt { get; set; }
+        public string? CreatedByAdminId { get; set; }
 
         public ICollection<Transaction> Transactions { get; set; } = [];
         public ICollection<Beneficiary> Beneficiaries { get; set; } = [];
