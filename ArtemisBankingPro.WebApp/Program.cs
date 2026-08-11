@@ -2,8 +2,15 @@ using ArtemisBankingPro.Core.Application;
 using ArtemisBankingPro.Infrastructure.Identity;
 using ArtemisBankingPro.Infrastructure.Persistence;
 using ArtemisBankingPro.Infrastructure.Shared;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext().CreateLogger(); // Configure Serilog for logging
+
+builder.Host.UseSerilog(Log.Logger);// Use Serilog for logging
 
 // Add services to the container.
 builder.Services.AddControllersWithViews()
