@@ -10,6 +10,7 @@ using ArtemisBankingPro.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ArtemisBankingPro.Infrastructure.Identity.Services
 {
@@ -18,13 +19,15 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
         protected readonly UserManager<AppUser> _userManager;
         protected readonly IEmailService _emailService;
         protected readonly ISavingsAccountService _savingsAccountService;
+        protected readonly ILogger<BaseAccountService> _logger;
 
-        public BaseAccountService(UserManager<AppUser> userManager, IEmailService emailService, 
-            ISavingsAccountService savingsAccountService)
+        public BaseAccountService(UserManager<AppUser> userManager, IEmailService emailService,
+            ISavingsAccountService savingsAccountService, ILogger<BaseAccountService> logger)
         {
             _userManager = userManager;
             _emailService = emailService;
             _savingsAccountService = savingsAccountService;
+            _logger = logger;
         }
 
         public virtual async Task<Result<PagedResult<UserDto>>> GetAllUsersAsync(int page, int pageSize, string? role)
@@ -154,16 +157,19 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             if (await _userManager.FindByEmailAsync(registerDto.Email) is not null)
             {
+                _logger.LogWarning("User registration rejected: email {Email} is already registered.", registerDto.Email);
                 return Result<RegisterResponseDto>.Failure(error: "A user with this email address is already registered.");
             }
 
             if (await _userManager.FindByNameAsync(registerDto.UserName) is not null)
             {
+                _logger.LogWarning("User registration rejected: username {UserName} is already registered.", registerDto.UserName);
                 return Result<RegisterResponseDto>.Failure(error: "A user with this username is already registered.");
             }
 
             if (await _userManager.Users.AnyAsync(u => u.Identification == registerDto.Identification))
             {
+                _logger.LogWarning("User registration rejected: identification {Identification} is already registered.", registerDto.Identification);
                 return Result<RegisterResponseDto>.Failure(error: "A user with this identification is already registered.");
             }
 
@@ -189,14 +195,23 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             if (role == "Client" || role == "Commerce")
             {
+                var initialAmount = registerDto.InitialAmount ?? 0m;
                 var accountResult = await _savingsAccountService.CreatePrincipalAccountAsync(user.Id, registerDto.InitialAmount ?? 0m);
 
                 if (!accountResult.IsSuccess)
                 {
                     await _userManager.DeleteAsync(user);
+                    _logger.LogWarning("User {UserId} rolled back after principal account creation failed: {Error}.", user.Id, accountResult.Error);
                     return Result<RegisterResponseDto>.Failure(error: accountResult.Error!);
                 }
+
+                if (initialAmount > 0)
+                {
+                    _logger.LogInformation("Principal savings account opened for {Role} {UserId} with an initial credit of {InitialAmount:C}.", role, user.Id, initialAmount);
+                }
             }
+
+            _logger.LogInformation("User {UserId} created successfully with role {Role}.", user.Id, role);
 
             await SendActivationEmailAsync(user, origin, isApi);
 
@@ -245,6 +260,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             if (await _userManager.Users.AnyAsync(u => u.Identification == updateDto.Identification && u.Id != updateDto.Id))
             {
+                _logger.LogWarning("User update rejected for {UserId}: identification {Identification} already belongs to another user.", updateDto.Id, updateDto.Identification);
                 return Result.Failure(error: "There is already another registered user with this identification.");
             }
 
@@ -261,6 +277,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             var existingByEmail = await _userManager.FindByEmailAsync(updateDto.Email);
             if (existingByEmail is not null && existingByEmail.Id != updateDto.Id)
             {
+                _logger.LogWarning("User update rejected for {UserId}: email {Email} already belongs to another user.", updateDto.Id, updateDto.Email);
                 return Result.Failure(error: "There is already another registered user with this email.");
             }
 
@@ -272,6 +289,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             var existingByUserName = await _userManager.FindByNameAsync(updateDto.UserName);
             if (existingByUserName is not null && existingByUserName.Id != updateDto.Id)
             {
+                _logger.LogWarning("User update rejected for {UserId}: username {UserName} already belongs to another user.", updateDto.Id, updateDto.UserName);
                 return Result.Failure(error: "There is already another registered user with this username.");
             }
 
@@ -327,14 +345,19 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             if ((isClient || isCommerce) && updateDto.AdditionalAmount is > 0)
             {
-                var creditResult = await _savingsAccountService.CreditAdditionalAmountAsync(
-                    user.Id, updateDto.AdditionalAmount!.Value, currentUserId);
+                var creditResult = await _savingsAccountService.CreditAdditionalAmountAsync(user.Id, updateDto.AdditionalAmount!.Value, currentUserId);
 
                 if (!creditResult.IsSuccess)
                 {
+                    _logger.LogWarning("Additional amount credit failed for user {UserId}: {Error}.", user.Id, creditResult.Error);
                     return Result.Failure(error: creditResult.Error!);
                 }
+
+                _logger.LogInformation("Additional amount of {AdditionalAmount:C} credited to user {UserId} by administrator {CurrentUserId}.",
+                        updateDto.AdditionalAmount.Value, user.Id, currentUserId);
             }
+
+            _logger.LogInformation("User {UserId} updated successfully by administrator {CurrentUserId}.", user.Id, currentUserId);
 
             return Result.Success(message: "The user has been updated successfully.");
         }
@@ -343,6 +366,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
         {
             if (userId == currentUserId)
             {
+                _logger.LogWarning("Administrator {CurrentUserId} attempted to change their own account status.", currentUserId);
                 return Result.Failure(error: "You cannot change the status of your own account.");
             }
 
@@ -359,6 +383,8 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             {
                 return Result.Failure(error: string.Join("\n", updateResult.Errors.Select(e => e.Description)));
             }
+
+            _logger.LogInformation("User {UserId} was {Status} by administrator {CurrentUserId}.", userId, isActive ? "activated" : "deactivated", currentUserId);
 
             return Result.Success(message: isActive
                 ? "The user has been activated successfully."

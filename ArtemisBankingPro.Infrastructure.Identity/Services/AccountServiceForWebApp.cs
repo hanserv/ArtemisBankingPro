@@ -3,6 +3,7 @@ using ArtemisBankingPro.Core.Application.DTOs.User;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace ArtemisBankingPro.Infrastructure.Identity.Services
 {
@@ -10,8 +11,10 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
     {
         private readonly SignInManager<AppUser> _signInManager;
 
-        public AccountServiceForWebApp(UserManager<AppUser> userManager, IEmailService emailService,ISavingsAccountService savingsAccountService, SignInManager<AppUser> signInManager) 
-            : base(userManager, emailService, savingsAccountService)
+        public AccountServiceForWebApp(UserManager<AppUser> userManager, IEmailService emailService,
+            ISavingsAccountService savingsAccountService, SignInManager<AppUser> signInManager,
+            ILogger<BaseAccountService> logger) 
+            : base(userManager, emailService, savingsAccountService, logger)
         {
             _signInManager = signInManager;
         }
