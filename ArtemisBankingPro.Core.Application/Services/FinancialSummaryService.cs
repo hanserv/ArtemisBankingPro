@@ -9,11 +9,14 @@ namespace ArtemisBankingPro.Core.Application.Services
     {
         private readonly ILoanRepository _loanRepository;
         private readonly ICreditCardRepository _creditCardRepository;
+        private readonly IBasicUserInfoService _basicUserInfoService;
 
-        public FinancialSummaryService(ILoanRepository loanRepository, ICreditCardRepository creditCardRepository)
+        public FinancialSummaryService(ILoanRepository loanRepository, ICreditCardRepository creditCardRepository, 
+            IBasicUserInfoService basicUserInfoService)
         {
             _loanRepository = loanRepository;
             _creditCardRepository = creditCardRepository;
+            _basicUserInfoService = basicUserInfoService;
         }
 
         public async Task<decimal> GetTotalDebtByClientAsync(string clientId)
@@ -29,12 +32,26 @@ namespace ArtemisBankingPro.Core.Application.Services
             return loanDebt + creditCardDebt;
         }
 
-        public Task<bool> CheckIfHighRiskAsync(string clientId, decimal additionalDebt)
+        public async Task<decimal> GetSystemAverageDebtAsync()
         {
-            throw new NotImplementedException();
+            var activeClients = await _basicUserInfoService.GetActiveClientsAsync(null);
+
+            if (activeClients.Count == 0)
+            {
+                return 0m;
+            }
+
+            decimal totalDebt = 0m;
+
+            foreach (var client in activeClients)
+            {
+                totalDebt += await GetTotalDebtByClientAsync(client.Id);
+            }
+
+            return totalDebt / activeClients.Count;
         }
 
-        public Task<decimal> GetSystemAverageDebtAsync()
+        public Task<bool> CheckIfHighRiskAsync(string clientId, decimal additionalDebt)
         {
             throw new NotImplementedException();
         }

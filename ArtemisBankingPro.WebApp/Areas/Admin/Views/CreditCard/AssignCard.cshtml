@@ -1,0 +1,42 @@
+﻿@model AssignCreditCardViewModel
+@{
+    ViewData["Title"] = "Assign credit card";
+}
+
+<div>
+    <div class="d-flex justify-content-between gap-2 mb-3">
+        <a asp-area="Admin" asp-controller="CreditCard" asp-action="Assign" class="btn btn-outline-dark fw-semibold">
+            <i class="bi bi-arrow-left"></i> Go back
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h2 class="fs-5 m-0">
+                <i class="bi bi-credit-card"></i> New credit card
+            </h2>
+        </div>
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <form asp-area="Admin" asp-controller="CreditCard" asp-action="AssignCard" method="post" class="row g-3">
+                <input type="hidden" asp-for="ClientId" />
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="CreditLimit" class="form-label">Credit limit</label>
+                    <div class="input-group">
+                        <span class="input-group-text">RD$</span>
+                        <input asp-for="CreditLimit" class="form-control" step="0.01" />
+                    </div>
+                    <span asp-validation-for="CreditLimit" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-dark px-5 fw-semibold">
+                        <i class="bi bi-check-lg"></i> Assign
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

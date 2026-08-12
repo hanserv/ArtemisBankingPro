@@ -17,13 +17,15 @@ namespace ArtemisBankingPro.WebApp.Areas.Admin.Controllers
         private readonly ISavingsAccountService _savingsAccountService;
         private readonly IMapper _mapper;
         private readonly ITransactionService _transactionService;
+        private readonly IAccountServiceForWebApp _accountService;
 
-        public SavingsAccountController(ISavingsAccountService savingsAccountService, IMapper mapper, 
-            ITransactionService transactionService)
+        public SavingsAccountController(ISavingsAccountService savingsAccountService, IMapper mapper,
+            ITransactionService transactionService, IAccountServiceForWebApp accountService)
         {
             _savingsAccountService = savingsAccountService;
             _mapper = mapper;
             _transactionService = transactionService;
+            _accountService = accountService;
         }
 
         public async Task<IActionResult> Index(SavingsAccountFilterViewModel filter)
@@ -32,31 +34,24 @@ namespace ArtemisBankingPro.WebApp.Areas.Admin.Controllers
 
             var result = await _savingsAccountService.GetPagedAsync(filterDto);
 
-            var vm = new SavingsAccountListViewModel
-            {
-                Filter = filter,
-                Accounts = result.IsSuccess 
-                    ? _mapper.Map<PagedResult<SavingsAccountViewModel>>(result.Value!)
-                    : new PagedResult<SavingsAccountViewModel>
-                        {
-                            Items = [],
-                            Page = filter.Page,
-                            PageSize = filter.PageSize,
-                            TotalRecords = 0
-                        }
-            };
-
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = result.Error;
+                return RedirectToRoute(new { area = "Admin", controller = "SavingsAccount", action = "Index" });
             }
+
+            var vm = new SavingsAccountListViewModel
+            {
+                Filter = filter,
+                Accounts = _mapper.Map<PagedResult<SavingsAccountViewModel>>(result.Value!)
+            };
 
             return View(vm);
         }
 
         public async Task<IActionResult> Assign(string? identification)
         {
-            var result = await _savingsAccountService.GetClientsForAssignmentAsync(identification);
+            var result = await _accountService.GetClientsForAssignmentAsync(identification);
 
             var vm = new AssignSelectClientViewModel
             {
@@ -76,7 +71,7 @@ namespace ArtemisBankingPro.WebApp.Areas.Admin.Controllers
             if (!validation.IsSuccess)
             {
                 ModelState.AddModelError("", validation.Error!);
-                var result = await _savingsAccountService.GetClientsForAssignmentAsync(vm.Identification);
+                var result = await _accountService.GetClientsForAssignmentAsync(vm.Identification);
                 vm.Clients = result.IsSuccess ? _mapper.Map<List<ClientForAssignmentViewModel>>(result.Value!) : [];
                 return View(vm);
             }

@@ -64,5 +64,23 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             return user.IsActive;
         }
+
+        public async Task<UserBasicInfoDto?> GetBasicInfoAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user is null)
+            {
+                return null;
+            }
+
+            return new UserBasicInfoDto
+            {
+                Id = user.Id,
+                Identification = user.Identification,
+                FullName = $"{user.FirstName} {user.LastName}",
+                Email = user.Email!
+            };
+        }
     }
 }

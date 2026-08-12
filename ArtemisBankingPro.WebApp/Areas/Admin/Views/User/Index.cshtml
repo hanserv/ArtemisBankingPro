@@ -138,20 +138,17 @@
                 </table>
             </div>
         </div>
-
-        @if (Model.Users.TotalPages > 1)
-        {
-            <nav class="mt-3">
-                <ul class="pagination justify-content-center">
-                    @for (var i = 1; i <= Model.Users.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.Users.Page ? "active" : "")">
-                            <a class="page-link" asp-area="Admin" asp-controller="User" asp-action="Index" asp-route-Filter.Role="@Model.Filter.Role" asp-route-Filter.Page="@i">@i</a>
-                        </li>
-                    }
-                </ul>
-            </nav>
-        }
+       
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                @for (var i = 1; i <= Model.Users.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Users.Page ? "active" : "")">
+                        <a class="page-link" asp-area="Admin" asp-controller="User" asp-action="Index" asp-route-Filter.Role="@Model.Filter.Role" asp-route-Filter.Page="@i">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
     }
     else
     {

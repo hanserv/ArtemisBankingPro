@@ -1,6 +1,7 @@
 ﻿using ArtemisBankingPro.Core.Domain.Entities;
 using ArtemisBankingPro.Core.Domain.Interfaces;
 using ArtemisBankingPro.Infrastructure.Persistence.Contexts;
+using Microsoft.EntityFrameworkCore;
 
 namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
 {
@@ -9,5 +10,8 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
         public CreditCardRepository(ArtemisBankingProContext context) : base(context)
         {
         }
+
+        public async Task<bool> CardNumberExistsAsync(string cardNumber)
+            => await _dbSet.AnyAsync(cc => cc.CardNumber == cardNumber);
     }
 }

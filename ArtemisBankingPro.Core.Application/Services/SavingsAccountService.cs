@@ -1,6 +1,5 @@
 ﻿using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.SavingsAccount;
-using ArtemisBankingPro.Core.Application.DTOs.User;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Core.Domain.Common.Enums;
 using ArtemisBankingPro.Core.Domain.Entities;
@@ -202,28 +201,6 @@ namespace ArtemisBankingPro.Core.Application.Services
                 PageSize = filter.PageSize,
                 TotalRecords = totalRecords
             });
-        }
-
-        public async Task<Result<List<ClientForAssignmentDto>>> GetClientsForAssignmentAsync(string? identification)
-        {
-            var clients = await _basicUserInfoService.GetActiveClientsAsync(identification);
-
-            var items = new List<ClientForAssignmentDto>();
-            foreach (var client in clients)
-            {
-                var totalDebt = await _financialSummaryService.GetTotalDebtByClientAsync(client.Id);
-
-                items.Add(new ClientForAssignmentDto
-                {
-                    Id = client.Id,
-                    Identification = client.Identification,
-                    FullName = client.FullName,
-                    Email = client.Email,
-                    TotalDebt = totalDebt
-                });
-            }
-
-            return Result<List<ClientForAssignmentDto>>.Success(items);
         }
 
         public async Task<Result> ValidateClientForAssignmentAsync(string? clientId)

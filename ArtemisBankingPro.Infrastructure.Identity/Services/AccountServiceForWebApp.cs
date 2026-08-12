@@ -10,13 +10,18 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
     public class AccountServiceForWebApp : BaseAccountService, IAccountServiceForWebApp
     {
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly IBasicUserInfoService _basicUserInfoService;
+        private readonly IFinancialSummaryService _financialSummaryService;
 
         public AccountServiceForWebApp(UserManager<AppUser> userManager, IEmailService emailService,
             ISavingsAccountService savingsAccountService, SignInManager<AppUser> signInManager,
-            ILogger<BaseAccountService> logger) 
+            ILogger<BaseAccountService> logger, IBasicUserInfoService basicUserInfoService, 
+            IFinancialSummaryService financialSummaryService)
             : base(userManager, emailService, savingsAccountService, logger)
         {
             _signInManager = signInManager;
+            _basicUserInfoService = basicUserInfoService;
+            _financialSummaryService = financialSummaryService;
         }
 
         public async Task<Result<LoginResponseDto>> AuthenticateAsync(LoginDto loginDto)
@@ -74,6 +79,28 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
         public async Task SignOutAsync()
         {
             await _signInManager.SignOutAsync();
+        }
+
+        public async Task<Result<List<ClientForAssignmentDto>>> GetClientsForAssignmentAsync(string? identification)
+        {
+            var clients = await _basicUserInfoService.GetActiveClientsAsync(identification);
+
+            var items = new List<ClientForAssignmentDto>();
+            foreach (var client in clients)
+            {
+                var totalDebt = await _financialSummaryService.GetTotalDebtByClientAsync(client.Id);
+
+                items.Add(new ClientForAssignmentDto
+                {
+                    Id = client.Id,
+                    Identification = client.Identification,
+                    FullName = client.FullName,
+                    Email = client.Email,
+                    TotalDebt = totalDebt
+                });
+            }
+
+            return Result<List<ClientForAssignmentDto>>.Success(items);
         }
     }
 }

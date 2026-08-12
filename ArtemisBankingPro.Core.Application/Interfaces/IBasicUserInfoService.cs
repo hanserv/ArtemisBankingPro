@@ -8,5 +8,6 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
         Task<string> GetFullNameAsync(string userId);
         Task<List<UserBasicInfoDto>> GetActiveClientsAsync(string? identification);
         Task<bool?> IsClientActiveAsync(string clientId);
+        Task<UserBasicInfoDto?> GetBasicInfoAsync(string userId);
     }
 }

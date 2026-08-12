@@ -1,13 +1,13 @@
-﻿@model CancelSavingsAccountViewModel
+﻿@model CancelCreditCardViewModel
 @{
-    ViewData["Title"] = "Cancel Account";
+    ViewData["Title"] = "Cancel Credit Card";
 }
 
 <div class="mb-5">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-dark text-white">
             <h2 class="fs-5 m-0">
-                <i class="bi bi-x-circle"></i> Cancel Account
+                <i class="bi bi-x-circle"></i> Cancel Credit Card
             </h2>
         </div>
 
@@ -16,16 +16,16 @@
 
             <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
 
-            <form asp-area="Admin" asp-controller="SavingsAccount" asp-action="Cancel" method="post">
+            <form asp-area="Admin" asp-controller="CreditCard" asp-action="Cancel" method="post">
                 <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="AccountNumber" />
+                <input type="hidden" asp-for="LastFourDigits" />
 
                 <p class="fs-5 mt-3 mb-4">
-                    Are you sure you want to cancel the account <strong>@Model.AccountNumber</strong>?
+                    Are you sure you want to cancel the credit card ending in <strong>@Model.LastFourDigits</strong>?
                 </p>
 
                 <div class="d-flex justify-content-center gap-2">
-                    <a asp-area="Admin" asp-controller="SavingsAccount" asp-action="Index" class="btn btn-outline-dark px-4">
+                    <a asp-area="Admin" asp-controller="CreditCard" asp-action="Index" class="btn btn-outline-dark px-4">
                         <i class="bi bi-x-lg"></i> Cancel
                     </a>
 
