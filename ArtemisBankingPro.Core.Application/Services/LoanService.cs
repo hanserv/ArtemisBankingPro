@@ -263,6 +263,7 @@ namespace ArtemisBankingPro.Core.Application.Services
                     SavingsAccountId = principalAccount.Id,
                     Amount = dto.CapitalAmount,
                     Type = TransactionType.Credit,
+                    Category = TransactionCategory.LoanDisbursement,
                     Origin = $"Loan {loanNumber}",
                     Beneficiary = principalAccount.AccountNumber,
                     Status = TransactionStatus.Approved,

@@ -7,5 +7,6 @@ namespace ArtemisBankingPro.Core.Domain.Interfaces
         Task<bool> LoanNumberExistsAsync(string loanNumber);
         Task<bool> ClientHasActiveLoanAsync(string clientId);
         Task<int> MarkOverdueInstallmentsAsync();
+        Task<int> CountActiveAsync();
     }
 }

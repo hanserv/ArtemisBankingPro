@@ -10,6 +10,7 @@ namespace ArtemisBankingPro.Core.Domain.Entities
 
         public required decimal Amount { get; set; }
         public required TransactionType Type { get; set; }
+        public required TransactionCategory Category { get; set;  }
 
         public required string Origin { get; set; }
         public required string Beneficiary { get; set; } 

@@ -28,6 +28,7 @@ namespace ArtemisBankingPro.Core.Application
             services.AddScoped<ITransactionService,TransactionService>();
             services.AddScoped<ICreditCardService,CreditCardService>();
             services.AddScoped<ILoanService,LoanService>();
+            services.AddScoped<IDashboardService,DashboardService>();
             #endregion
         }
     }

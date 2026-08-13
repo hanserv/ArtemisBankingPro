@@ -26,5 +26,8 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
                 .Where(i => i.DueDate.Date < today && i.Status != InstallmentStatus.Paid && !i.IsLate)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(i => i.IsLate, true));
         }
+
+        public async Task<int> CountActiveAsync()
+            => await _dbSet.CountAsync(a => a.Status == LoanStatus.Active);
     }
 }

@@ -82,5 +82,11 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
                 Email = user.Email!
             };
         }
+
+        public async Task<(int Active, int Inactive)> GetClientStatusCountsAsync()
+        {
+            var clients = await _userManager.GetUsersInRoleAsync("Client");
+            return (clients.Count(c => c.IsActive), clients.Count(c => !c.IsActive));
+        }
     }
 }

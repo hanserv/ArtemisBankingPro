@@ -18,6 +18,7 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.EntityConfigurations
             builder.Property(t => t.SavingsAccountId).IsRequired();
             builder.Property(t => t.Amount).IsRequired().HasPrecision(18, 2);
             builder.Property(t => t.Type).IsRequired();
+            builder.Property(t => t.Category).IsRequired();
             builder.Property(t => t.Origin).IsRequired().HasMaxLength(50);
             builder.Property(t => t.Beneficiary).IsRequired().HasMaxLength(50);
             builder.Property(t => t.Status).IsRequired();
