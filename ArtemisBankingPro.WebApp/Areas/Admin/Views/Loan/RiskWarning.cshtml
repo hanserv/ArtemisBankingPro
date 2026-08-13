@@ -1,0 +1,50 @@
+﻿@model LoanRiskWarningViewModel
+@{
+    ViewData["Title"] = "High risk warning";
+    var message = Model.RiskType == RiskType.CurrentHighRisk
+        ? "This client is considered high risk, as their current debt exceeds the system average."
+        : "Assigning this loan will make the client high risk, as their debt will exceed the system average threshold.";
+}
+
+<div>
+    <div class="card shadow-sm border-0 border-danger">
+        <div class="card-header bg-danger text-white">
+            <h2 class="fs-5 m-0">
+                <i class="bi bi-exclamation-triangle-fill"></i> High risk warning
+            </h2>
+        </div>
+        <div class="card-body">
+            <p class="fs-6">@message</p>
+
+            <div class="row g-3 my-2">
+                <div class="col-12 col-md-4">
+                    <div class="text-secondary small">Current debt</div>
+                    <div class="fs-5 fw-bold">RD$ @Model.CurrentDebt.ToString("N2")</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="text-secondary small">Projected debt</div>
+                    <div class="fs-5 fw-bold">RD$ @Model.ProjectedDebt.ToString("N2")</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="text-secondary small">System average debt</div>
+                    <div class="fs-5 fw-bold">RD$ @Model.AverageDebt.ToString("N2")</div>
+                </div>
+            </div>
+
+            <form asp-area="Admin" asp-controller="Loan" asp-action="AssignLoan" method="post" class="d-flex justify-content-end gap-2 mt-4">
+                <input type="hidden" name="ClientId" value="@Model.Loan.ClientId" />
+                <input type="hidden" name="TermInMonths" value="@Model.Loan.TermInMonths" />
+                <input type="hidden" name="CapitalAmount" value="@Model.Loan.CapitalAmount" />
+                <input type="hidden" name="AnnualInterestRate" value="@Model.Loan.AnnualInterestRate" />
+                <input type="hidden" name="RiskWarningAccepted" value="true" />
+
+                <a asp-area="Admin" asp-controller="Loan" asp-action="Assign" class="btn btn-outline-dark fw-semibold">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-danger fw-semibold px-4">
+                    <i class="bi bi-check-lg"></i> Confirm assignment
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

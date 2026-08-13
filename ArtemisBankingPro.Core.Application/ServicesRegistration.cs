@@ -22,10 +22,12 @@ namespace ArtemisBankingPro.Core.Application
             #region Services
             services.AddScoped<IAccountNumberGenerator,AccountNumberGenerator>();
             services.AddScoped<ICardNumberGenerator,CardNumberGenerator>();
+            services.AddScoped<ILoanNumberGenerator,LoanNumberGenerator>();
             services.AddScoped<ISavingsAccountService,SavingsAccountService>();
             services.AddScoped<IFinancialSummaryService,FinancialSummaryService>();
             services.AddScoped<ITransactionService,TransactionService>();
             services.AddScoped<ICreditCardService,CreditCardService>();
+            services.AddScoped<ILoanService,LoanService>();
             #endregion
         }
     }

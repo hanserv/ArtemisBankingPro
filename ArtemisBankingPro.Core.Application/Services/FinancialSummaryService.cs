@@ -1,4 +1,5 @@
-﻿using ArtemisBankingPro.Core.Application.Interfaces;
+﻿using ArtemisBankingPro.Core.Application.DTOs.Loan;
+using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Core.Domain.Common.Enums;
 using ArtemisBankingPro.Core.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -34,26 +35,52 @@ namespace ArtemisBankingPro.Core.Application.Services
 
         public async Task<decimal> GetSystemAverageDebtAsync()
         {
-            var activeClients = await _basicUserInfoService.GetActiveClientsAsync(null);
+            var activeClientIds = (await _basicUserInfoService.GetActiveClientsAsync(null))
+                .Select(c => c.Id)
+                .ToList();
 
-            if (activeClients.Count == 0)
+            if (activeClientIds.Count == 0)
             {
                 return 0m;
             }
 
-            decimal totalDebt = 0m;
+            var totalLoanDebt = await _loanRepository.GetAllQuery()
+                .Where(l => l.Status == LoanStatus.Active && activeClientIds.Contains(l.ClientId))
+                .SumAsync(l => l.PendingAmount);
 
-            foreach (var client in activeClients)
-            {
-                totalDebt += await GetTotalDebtByClientAsync(client.Id);
-            }
+            var totalCreditCardDebt = await _creditCardRepository.GetAllQuery()
+                .Where(c => c.Status == CreditCardStatus.Active && activeClientIds.Contains(c.ClientId))
+                .SumAsync(c => c.CurrentDebt);
 
-            return totalDebt / activeClients.Count;
+            var totalDebt = totalLoanDebt + totalCreditCardDebt;
+
+            return Math.Round(totalDebt / activeClientIds.Count, 2, MidpointRounding.AwayFromZero);
         }
 
-        public Task<bool> CheckIfHighRiskAsync(string clientId, decimal additionalDebt)
+        public async Task<LoanRiskWarningDto?> CheckIfHighRiskAsync(string clientId, decimal additionalDebt)
         {
-            throw new NotImplementedException();
+            var currentDebt = await GetTotalDebtByClientAsync(clientId);
+            var averageDebt = await GetSystemAverageDebtAsync();
+            var projectedDebt = currentDebt + additionalDebt;
+
+            RiskType? riskType = currentDebt > averageDebt
+                ? RiskType.CurrentHighRisk
+                : projectedDebt > averageDebt
+                    ? RiskType.ProjectedHighRisk
+                    : null;
+
+            if (riskType is null)
+            {
+                return null;
+            }
+
+            return new LoanRiskWarningDto
+            {
+                RiskType = riskType.Value,
+                CurrentDebt = currentDebt,
+                ProjectedDebt = projectedDebt,
+                AverageDebt = averageDebt
+            };
         }
     }
 }

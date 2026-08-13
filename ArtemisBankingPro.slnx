@@ -13,6 +13,9 @@
   <Folder Name="/Source/Presentation/Api/">
     <Project Path="ArtemisBankingPro.Api/ArtemisBankingPro.Api.csproj" Id="5d13a859-ae33-46e0-b6b2-6978f7e89b79" />
   </Folder>
+  <Folder Name="/Source/Presentation/AzureFunctions/">
+    <Project Path="MarkOverdueLoanInstallments/MarkOverdueLoanInstallments.csproj" Id="cb039054-23c1-4b16-9ec7-fced15d4b74f" />
+  </Folder>
   <Folder Name="/Source/Presentation/WebApp/">
     <Project Path="ArtemisBankingPro.WebApp/ArtemisBankingPro.WebApp.csproj" Id="d38cb162-512b-4657-870c-198b73a93747" />
   </Folder>

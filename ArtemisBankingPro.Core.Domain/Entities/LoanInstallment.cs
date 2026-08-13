@@ -10,7 +10,7 @@ namespace ArtemisBankingPro.Core.Domain.Entities
         public required decimal InstallmentAmount { get; set; } 
         public required decimal InterestAmount { get; set; }
         public required decimal PrincipalAmount { get; set; }
-        public required decimal RemainingBalance { get; set; } // will be "pendingInstallmentAmount" in dto
+        public required decimal RemainingBalance { get; set; } 
         public required InstallmentStatus Status { get; set; }
         public bool IsLate { get; set; }
 

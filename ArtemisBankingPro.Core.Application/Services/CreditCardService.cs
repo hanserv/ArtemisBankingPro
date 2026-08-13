@@ -348,8 +348,7 @@ namespace ArtemisBankingPro.Core.Application.Services
 
                 return false;
             }
-
-        #endregion
         }
+        #endregion
     }
 }
