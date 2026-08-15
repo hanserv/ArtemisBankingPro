@@ -1,5 +1,6 @@
 ﻿using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.Loan;
+using ArtemisBankingPro.Core.Application.DTOs.Transaction;
 using ArtemisBankingPro.Core.Application.DTOs.User;
 
 namespace ArtemisBankingPro.Core.Application.Interfaces
@@ -7,6 +8,7 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
     public interface ILoanService
     {
         Task<Result<AssignLoanResultDto>> AssignAsync(AssignLoanDto dto);
+        Task<Result> ConfirmLoanPaymentAsync(LoanPaymentConfirmationDto dto, string cashierId);
         Task<Result<LoanDto>> GetByIdAsync(int id);
         Task<Result<List<ClientForAssignmentDto>>> GetClientsEligibleForLoanAsync(string? identification);
         Task<Result<LoanDetailsDto>> GetDetailsAsync(int id);
@@ -14,5 +16,6 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
         Task<int> MarkOverdueInstallmentsAsync();
         Task<Result> ModifyRateAsync(ModifyLoanRateDto dto, string performedByAdminId);
         Task<Result> ValidateClientForAssignmentAsync(string? clientId);
+        Task<Result<LoanPaymentConfirmationDto>> ValidateLoanPaymentAsync(LoanPaymentDto dto, string cashierId);
     }
 }

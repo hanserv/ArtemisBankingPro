@@ -1,0 +1,52 @@
+﻿@model LoanPaymentViewModel
+@{
+    ViewData["Title"] = "Loan payment";
+}
+
+<div>
+    <div class="d-flex justify-content-between gap-2 mb-3">
+        <a asp-area="Cashier" asp-controller="Home" asp-action="Index" class="btn btn-outline-dark fw-semibold">
+            <i class="bi bi-arrow-left"></i> Go back
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h2 class="fs-5 m-0">
+                <i class="bi bi-cash-stack"></i> Loan payment
+            </h2>
+        </div>
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <form asp-area="Cashier" asp-controller="Transaction" asp-action="LoanPayment" method="post" class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label asp-for="SourceAccountNumber" class="form-label">Source account number</label>
+                    <input asp-for="SourceAccountNumber" class="form-control" placeholder="000000000" />
+                    <span asp-validation-for="SourceAccountNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="LoanNumber" class="form-label">Loan number</label>
+                    <input asp-for="LoanNumber" class="form-control" placeholder="000000000" maxlength="9" />
+                    <span asp-validation-for="LoanNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Amount" class="form-label">Amount to pay</label>
+                    <div class="input-group">
+                        <span class="input-group-text">RD$</span>
+                        <input asp-for="Amount" class="form-control" step="0.01" />
+                    </div>
+                    <span asp-validation-for="Amount" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-dark px-5 fw-semibold">
+                        <i class="bi bi-check-lg"></i> Make payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

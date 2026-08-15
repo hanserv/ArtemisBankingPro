@@ -6,5 +6,6 @@ namespace ArtemisBankingPro.Core.Domain.Interfaces
     {
         Task<bool> CardNumberExistsAsync(string cardNumber);
         Task<int> CountActiveAsync();
+        Task<CreditCard?> GetByCardNumberAsync(string cardNumber);
     }
 }

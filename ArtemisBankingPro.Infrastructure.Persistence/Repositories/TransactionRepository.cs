@@ -12,24 +12,59 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
         {
         }
 
-        public async Task<int> CountTransactionsAsync(DateTime? date = null)
+        public async Task<int> CountTransactionsAsync(DateTime? date = null, string? performedByUserId = null, bool onlyApproved = false)
         {
             var query = _dbSet.AsQueryable();
+
+            if (onlyApproved)
+            {
+                query = query.Where(t => t.Status == TransactionStatus.Approved);
+            }
+
             if (date is not null)
             {
                 query = query.Where(t => t.CreatedAt.Date == date.Value.Date);
             }
 
+            if (performedByUserId is not null)
+            {
+                query = query.Where(t => t.PerformedByUserId == performedByUserId);
+            }
+
             return await query.CountAsync();
         }
 
-        public async Task<int> CountPaymentsAsync(DateTime? date = null)
+        public async Task<int> CountPaymentsAsync(DateTime? date = null, string? performedByUserId = null)
         {
-            var query = _dbSet.Where(t =>t.Category == TransactionCategory.LoanPayment || t.Category == TransactionCategory.CreditCardPayment);
+            var query = _dbSet.Where(t =>
+                (t.Category == TransactionCategory.LoanPayment || t.Category == TransactionCategory.CreditCardPayment)
+                && t.Status == TransactionStatus.Approved);
 
             if (date is not null)
             {
                 query = query.Where(t => t.CreatedAt.Date == date.Value.Date);
+            }
+
+            if (performedByUserId is not null)
+            {
+                query = query.Where(t => t.PerformedByUserId == performedByUserId);
+            }
+
+            return await query.CountAsync();
+        }
+
+        public async Task<int> CountByCategoryAsync(TransactionCategory category, DateTime? date = null, string? performedByUserId = null)
+        {
+            var query = _dbSet.Where(t => t.Category == category && t.Status == TransactionStatus.Approved);
+
+            if (date is not null)
+            {
+                query = query.Where(t => t.CreatedAt.Date == date.Value.Date);
+            }
+
+            if (performedByUserId is not null)
+            {
+                query = query.Where(t => t.PerformedByUserId == performedByUserId);
             }
 
             return await query.CountAsync();

@@ -1,5 +1,6 @@
 ﻿using ArtemisBankingPro.Core.Application.DTOs.Dashboard;
 using ArtemisBankingPro.Core.Application.Interfaces;
+using ArtemisBankingPro.Core.Domain.Common.Enums;
 using ArtemisBankingPro.Core.Domain.Interfaces;
 
 namespace ArtemisBankingPro.Core.Application.Services
@@ -56,6 +57,29 @@ namespace ArtemisBankingPro.Core.Application.Services
             };
 
             return Result<AdminDashboardDto>.Success(dto);
+        }
+
+        public async Task<Result<CashierDashboardDto>> GetCashierSummaryAsync(string cashierId)
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var todayTransactions = await _transactionRepository.CountTransactionsAsync(today, cashierId, onlyApproved: true);
+
+            var todayPayments = await _transactionRepository.CountPaymentsAsync(today, cashierId);
+
+            var todayDeposits = await _transactionRepository.CountByCategoryAsync(TransactionCategory.Deposit, today, cashierId);
+
+            var todayWithdrawals = await _transactionRepository.CountByCategoryAsync(TransactionCategory.Withdrawal, today, cashierId);
+
+            var dto = new CashierDashboardDto
+            {
+                TodayTransactions = todayTransactions,
+                TodayPayments = todayPayments,
+                TodayDeposits = todayDeposits,
+                TodayWithdrawals = todayWithdrawals
+            };
+
+            return Result<CashierDashboardDto>.Success(dto);
         }
     }
 }

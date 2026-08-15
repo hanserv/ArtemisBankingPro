@@ -20,5 +20,8 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
 
         public async Task<int> CountActiveAsync()
             =>  await _dbSet.CountAsync(a => a.Status == SavingsAccountStatus.Active);
+
+        public async Task<SavingsAccount?> GetByAccountNumberAsync(string accountNumber)
+            => await _dbSet.FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
     }
 }

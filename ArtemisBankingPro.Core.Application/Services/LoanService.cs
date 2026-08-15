@@ -1,6 +1,7 @@
 ﻿using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.Email;
 using ArtemisBankingPro.Core.Application.DTOs.Loan;
+using ArtemisBankingPro.Core.Application.DTOs.Transaction;
 using ArtemisBankingPro.Core.Application.DTOs.User;
 using ArtemisBankingPro.Core.Application.Helpers;
 using ArtemisBankingPro.Core.Application.Interfaces;
@@ -360,13 +361,12 @@ namespace ArtemisBankingPro.Core.Application.Services
 
             loan.AnnualInterestRate = dto.AnnualInterestRate;
             loan.PendingAmount = allInstallments
-                .Where(i => i.Status != InstallmentStatus.Paid)
-                .Sum(i => i.InstallmentAmount);
+                    .Where(i => i.Status != InstallmentStatus.Paid)
+                    .Sum(i => i.RemainingBalance);
 
             await _loanRepository.UpdateAsync(loan);
 
-            _logger.LogInformation(
-                "Annual interest rate for loan {LoanNumber} updated to {NewRate}% by administrator {AdminId}. {RecalculatedCount} future installments recalculated.",
+            _logger.LogInformation("Annual interest rate for loan {LoanNumber} updated to {NewRate}% by administrator {AdminId}. {RecalculatedCount} future installments recalculated.",
                 loan.LoanNumber, dto.AnnualInterestRate, performedByAdminId, eligibleInstallments.Count);
 
             var emailSent = await TrySendRateUpdateEmailAsync(loan, eligibleInstallments[0]);
@@ -386,6 +386,163 @@ namespace ArtemisBankingPro.Core.Application.Services
             }
 
             return updatedCount;
+        }
+
+        public async Task<Result<LoanPaymentConfirmationDto>> ValidateLoanPaymentAsync(LoanPaymentDto dto, string cashierId)
+        {
+            var account = await _savingsAccountRepository.GetByAccountNumberAsync(dto.SourceAccountNumber);
+            if (account is null)
+            {
+                return Result<LoanPaymentConfirmationDto>.Failure("The account number entered does not correspond to a valid account.");
+            }
+
+            if (account.Status != SavingsAccountStatus.Active)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.Amount, cashierId);
+                return Result<LoanPaymentConfirmationDto>.Failure("The account number entered does not correspond to a valid account.");
+            }
+
+            if (dto.LoanNumber.Length != 9 || !dto.LoanNumber.All(char.IsDigit))
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.Amount, cashierId);
+                return Result<LoanPaymentConfirmationDto>.Failure("The loan number entered does not correspond to a valid loan.");
+            }
+
+            var loan = await _loanRepository.GetAllQuery()
+                .Include(l => l.Installments)
+                .FirstOrDefaultAsync(l => l.LoanNumber == dto.LoanNumber);
+
+            if (loan is null || loan.Status != LoanStatus.Active)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.Amount, cashierId);
+                return Result<LoanPaymentConfirmationDto>.Failure("The loan number entered does not correspond to a valid loan.");
+            }
+
+            if (dto.Amount <= 0)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.Amount, cashierId);
+                return Result<LoanPaymentConfirmationDto>.Failure("The payment amount must be greater than zero.");
+            }
+
+            var hasPendingInstallments = loan.Installments.Any(i => i.Status != InstallmentStatus.Paid);
+            if (!hasPendingInstallments)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.Amount, cashierId);
+                return Result<LoanPaymentConfirmationDto>.Failure("The selected loan has no pending installments.");
+            }
+
+            var effectiveAmount = Math.Min(dto.Amount, loan.PendingAmount);
+
+            if (account.Balance < effectiveAmount)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.Amount, cashierId);
+                return Result<LoanPaymentConfirmationDto>.Failure("The amount entered exceeds the account's available balance.");
+            }
+
+            var accountHolder = await _basicUserInfoService.GetBasicInfoAsync(account.ClientId);
+            var loanHolder = await _basicUserInfoService.GetBasicInfoAsync(loan.ClientId);
+
+            return Result<LoanPaymentConfirmationDto>.Success(new LoanPaymentConfirmationDto
+            {
+                SourceAccountNumber = account.AccountNumber,
+                AccountHolderName = accountHolder!.FullName,
+                LoanNumber = loan.LoanNumber,
+                LoanHolderName = loanHolder!.FullName,
+                EnteredAmount = dto.Amount,
+                EffectiveAmount = effectiveAmount
+            });
+        }
+
+        public async Task<Result> ConfirmLoanPaymentAsync(LoanPaymentConfirmationDto dto, string cashierId)
+        {
+            var account = await _savingsAccountRepository.GetByAccountNumberAsync(dto.SourceAccountNumber);
+            if (account is null)
+            {
+                return Result.Failure("The account number entered does not correspond to a valid account.");
+            }
+
+            if (account.Status != SavingsAccountStatus.Active)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.EnteredAmount, cashierId);
+                return Result.Failure("The account number entered does not correspond to a valid account.");
+            }
+
+            var loan = await _loanRepository.GetAllQuery()
+                .Include(l => l.Installments)
+                .FirstOrDefaultAsync(l => l.LoanNumber == dto.LoanNumber);
+
+            if (loan is null || loan.Status != LoanStatus.Active)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.EnteredAmount, cashierId);
+                return Result.Failure("The loan number entered does not correspond to a valid loan.");
+            }
+
+            if (dto.EnteredAmount <= 0)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.EnteredAmount, cashierId);
+                return Result.Failure("The payment amount must be greater than zero.");
+            }
+
+            var pendingInstallments = loan.Installments
+                .Where(i => i.Status != InstallmentStatus.Paid)
+                .OrderBy(i => i.InstallmentNumber)
+                .ToList();
+
+            if (pendingInstallments.Count == 0)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.EnteredAmount, cashierId);
+                return Result.Failure("The selected loan has no pending installments.");
+            }
+
+            var effectiveAmount = Math.Min(dto.EnteredAmount, loan.PendingAmount);
+
+            if (account.Balance < effectiveAmount)
+            {
+                await LogRejectedLoanPaymentAsync(account, dto.LoanNumber, dto.EnteredAmount, cashierId);
+                return Result.Failure("The amount entered exceeds the account's available balance.");
+            }
+
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                account.Balance -= effectiveAmount;
+                await _savingsAccountRepository.UpdateAsync(account);
+
+                ApplyPaymentToInstallments(pendingInstallments, effectiveAmount);
+
+                if (loan.Installments.All(i => i.Status == InstallmentStatus.Paid))
+                {
+                    loan.Status = LoanStatus.Completed;
+                }
+
+                loan.PendingAmount = loan.Installments
+                    .Where(i => i.Status != InstallmentStatus.Paid)
+                    .Sum(i => i.RemainingBalance);
+
+                await _loanRepository.UpdateAsync(loan);
+
+                await _transactionRepository.AddAsync(new Transaction
+                {
+                    Id = 0,
+                    SavingsAccountId = account.Id,
+                    Amount = effectiveAmount,
+                    Type = TransactionType.Debit,
+                    Category = TransactionCategory.LoanPayment,
+                    Origin = account.AccountNumber,
+                    Beneficiary = loan.LoanNumber,
+                    Status = TransactionStatus.Approved,
+                    PerformedByUserId = cashierId,
+                    CreatedAt = DateTime.UtcNow
+                });
+            });
+
+            _logger.LogInformation("Loan payment of {Amount:C} applied to loan {LoanNumber} from account ending in {LastFourDigits} by cashier {CashierId}.",
+                effectiveAmount, loan.LoanNumber, account.AccountNumber[^4..], cashierId);
+
+            var emailsSent = await TrySendLoanPaymentEmailsAsync(account, loan, effectiveAmount);
+
+            return Result.Success(emailsSent
+                ? "The payment was completed successfully."
+                : "The payment was completed successfully, but the notification email could not be sent.");
         }
 
         #region Private Methods
@@ -456,6 +613,119 @@ namespace ArtemisBankingPro.Core.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to send rate update email for loan {LoanNumber} to client {ClientId}.", loan.LoanNumber, loan.ClientId);
+                return false;
+            }
+        }
+
+        private static void ApplyPaymentToInstallments(List<LoanInstallment> pendingInstallments, decimal amountToApply)
+        {
+            var remainingAmount = amountToApply;
+
+            foreach (var installment in pendingInstallments)
+            {
+                if (remainingAmount <= 0)
+                {
+                    break;
+                }
+
+                if (remainingAmount >= installment.RemainingBalance)
+                {
+                    remainingAmount -= installment.RemainingBalance;
+                    installment.RemainingBalance = 0;
+                    installment.Status = InstallmentStatus.Paid;
+                    installment.IsLate = false;
+                }
+                else
+                {
+                    installment.RemainingBalance -= remainingAmount;
+                    installment.Status = InstallmentStatus.PartiallyPaid;
+                    remainingAmount = 0;
+                }
+            }
+        }
+
+        private async Task LogRejectedLoanPaymentAsync(SavingsAccount account, string loanNumber, decimal amount, string cashierId)
+        {
+            await _transactionRepository.AddAsync(new Transaction
+            {
+                Id = 0,
+                SavingsAccountId = account.Id,
+                Amount = amount,
+                Type = TransactionType.Debit,
+                Category = TransactionCategory.LoanPayment,
+                Origin = account.AccountNumber,
+                Beneficiary = loanNumber,
+                Status = TransactionStatus.Rejected,
+                PerformedByUserId = cashierId,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            _logger.LogWarning("Loan payment attempt of {Amount:C} from account ending in {LastFourDigits} to loan {LoanNumber} was rejected. Cashier: {CashierId}.",
+                amount, account.AccountNumber[^4..], loanNumber, cashierId);
+        }
+
+        private async Task<bool> TrySendLoanPaymentEmailsAsync(SavingsAccount account, Loan loan, decimal amount)
+        {
+            var accountHolder = await _basicUserInfoService.GetBasicInfoAsync(account.ClientId);
+            var loanHolder = account.ClientId == loan.ClientId
+                ? accountHolder
+                : await _basicUserInfoService.GetBasicInfoAsync(loan.ClientId);
+
+            var accountLastFour = account.AccountNumber[^4..];
+            var performedAt = DateTime.UtcNow;
+
+            try
+            {
+                var loanHolderResult = await _emailService.SendAsync(new EmailRequestDto
+                {
+                    To = loanHolder!.Email,
+                    Subject = $"Payment made to loan {loan.LoanNumber}",
+                    BodyHtml = $"""
+                        <h3 style="font-weight: normal;">Hello <span style="font-weight: bold;">{loanHolder.FullName}</span></h3>
+                        <p>A payment has been made to your loan <strong>{loan.LoanNumber}</strong>.</p>
+                        <p>Amount paid: <strong>RD$ {amount:N2}</strong></p>
+                        <p>Source account ending in: <strong>{accountLastFour}</strong></p>
+                        <p>Date and time: <strong>{performedAt:MM/dd/yyyy hh:mm tt}</strong></p>
+                        <p style="font-size: 14px; color: #6c757d;">If you do not recognize this operation, please contact the bank.</p>
+                    """
+                });
+
+                var loanHolderEmailSent = loanHolderResult.IsSuccess;
+                if (!loanHolderEmailSent)
+                {
+                    _logger.LogWarning("Loan payment email (loan owner) for loan {LoanNumber} was not sent: {Error}", loan.LoanNumber, loanHolderResult.Error);
+                }
+
+                if (account.ClientId == loan.ClientId)
+                {
+                    return loanHolderEmailSent;
+                }
+
+                var accountHolderResult = await _emailService.SendAsync(new EmailRequestDto
+                {
+                    To = accountHolder!.Email,
+                    Subject = $"Payment made using your account {accountLastFour}",
+                    BodyHtml = $"""
+                        <h3 style="font-weight: normal;">Hello <span style="font-weight: bold;">{accountHolder.FullName}</span></h3>
+                        <p>A loan payment was made using your account ending in <strong>{accountLastFour}</strong>.</p>
+                        <p>Amount debited: <strong>RD$ {amount:N2}</strong></p>
+                        <p>Loan paid: <strong>{loan.LoanNumber}</strong></p>
+                        <p>Date and time: <strong>{performedAt:MM/dd/yyyy hh:mm tt}</strong></p>
+                        <p style="font-size: 14px; color: #6c757d;">If you do not recognize this operation, please contact the bank.</p>
+                    """
+                });
+
+                var accountHolderEmailSent = accountHolderResult.IsSuccess;
+                if (!accountHolderEmailSent)
+                {
+                    _logger.LogWarning("Loan payment email (account owner) for account ending in {LastFourDigits} was not sent: {Error}", accountLastFour, accountHolderResult.Error);
+                }
+
+                return loanHolderEmailSent && accountHolderEmailSent;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send loan payment email(s) for loan {LoanNumber}.", loan.LoanNumber);
                 return false;
             }
         }

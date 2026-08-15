@@ -1,0 +1,70 @@
+﻿@model LoanPaymentConfirmationViewModel
+@{
+    ViewData["Title"] = "Confirm payment";
+}
+
+<div>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h2 class="fs-5 m-0">
+                <i class="bi bi-cash-stack"></i> Confirm payment
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-6">
+                    <div class="text-muted small">Account holder</div>
+                    <div class="fw-semibold">@Model.AccountHolderName</div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="text-muted small">Source account number</div>
+                    <div class="fw-semibold">@Model.SourceAccountNumber</div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="text-muted small">Loan holder</div>
+                    <div class="fw-semibold">@Model.LoanHolderName</div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="text-muted small">Loan number</div>
+                    <div class="fw-semibold">@Model.LoanNumber</div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="text-muted small">Amount entered</div>
+                    <div class="fw-semibold">RD$ @Model.EnteredAmount.ToString("N2")</div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="text-muted small">Effective amount to pay</div>
+                    <div class="fw-semibold">RD$ @Model.EffectiveAmount.ToString("N2")</div>
+                </div>
+            </div>
+
+            @if (Model.EnteredAmount > Model.EffectiveAmount)
+            {
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    The entered amount exceeds the loan's pending balance. Only RD$ @Model.EffectiveAmount.ToString("N2") will be charged.
+                </div>
+            }
+
+            <p class="text-center fw-semibold">Are you sure you want to make this payment?</p>
+
+            <form asp-area="Cashier" asp-controller="Transaction" asp-action="ConfirmLoanPayment" method="post">
+                <input type="hidden" asp-for="SourceAccountNumber" />
+                <input type="hidden" asp-for="AccountHolderName" />
+                <input type="hidden" asp-for="LoanNumber" />
+                <input type="hidden" asp-for="LoanHolderName" />
+                <input type="hidden" asp-for="EnteredAmount" />
+                <input type="hidden" asp-for="EffectiveAmount" />
+
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <a asp-area="Cashier" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary px-5 fw-semibold">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-dark px-5 fw-semibold">
+                        <i class="bi bi-check-lg"></i> Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

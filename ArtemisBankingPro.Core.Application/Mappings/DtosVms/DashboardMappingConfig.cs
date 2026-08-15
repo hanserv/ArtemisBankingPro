@@ -9,6 +9,7 @@ namespace ArtemisBankingPro.Core.Application.Mappings.DtosVms
         public void Register(TypeAdapterConfig config)
         {
             config.NewConfig<AdminDashboardDto, AdminDashboardViewModel>();
+            config.NewConfig<CashierDashboardDto, CashierDashboardViewModel>();
         }
     }
 }

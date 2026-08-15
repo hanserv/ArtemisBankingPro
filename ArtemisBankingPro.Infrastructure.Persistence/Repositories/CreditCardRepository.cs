@@ -17,5 +17,8 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
 
         public async Task<int> CountActiveAsync()
             => await _dbSet.CountAsync(a => a.Status == CreditCardStatus.Active);
+
+        public async Task<CreditCard?> GetByCardNumberAsync(string cardNumber)
+            => await GetAllQuery().FirstOrDefaultAsync(c => c.CardNumber == cardNumber);
     }
 }

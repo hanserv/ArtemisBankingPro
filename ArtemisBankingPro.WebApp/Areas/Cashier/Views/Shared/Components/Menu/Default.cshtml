@@ -7,6 +7,26 @@
 		<a asp-area="Cashier" asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action border-0">
 			<i class="bi bi-house-door"></i> Home
 		</a>
+
+		<a asp-area="Cashier" asp-controller="Transaction" asp-action="Deposit" class="list-group-item list-group-item-action border-0">
+			<i class="bi bi-piggy-bank"></i> Deposit
+		</a>
+
+		<a asp-area="Cashier" asp-controller="Transaction" asp-action="Withdrawal" class="list-group-item list-group-item-action border-0">
+			<i class="bi bi-cash"></i> Withdrawal
+		</a>
+
+		<a asp-area="Cashier" asp-controller="Transaction" asp-action="CreditCardPayment" class="list-group-item list-group-item-action border-0">
+			<i class="bi bi-credit-card"></i> Credit Card Payment
+		</a>
+
+		<a asp-area="Cashier" asp-controller="Transaction" asp-action="LoanPayment" class="list-group-item list-group-item-action border-0">
+			<i class="bi bi-cash-stack"></i> Loan Payment
+		</a>
+
+		<a asp-area="Cashier" asp-controller="Transaction" asp-action="ThirdPartyTransaction" class="list-group-item list-group-item-action border-0">
+			<i class="bi bi-arrow-left-right"></i> Third-party Transaction
+		</a>
 		
 		<form asp-area="" asp-controller="Auth" asp-action="LogOut" method="post">
 			<button class="list-group-item list-group-item-action border-0 text-danger">
