@@ -8,5 +8,6 @@ namespace ArtemisBankingPro.Core.Domain.Interfaces
         Task<int> CountByCategoryAsync(TransactionCategory category, DateTime? date = null, string? performedByUserId = null);
         Task<int> CountPaymentsAsync(DateTime? date = null, string? performedByUserId = null);
         Task<int> CountTransactionsAsync(DateTime? date = null, string? performedByUserId = null, bool onlyApproved = false);
+        Task<List<Transaction>> GetByAccountIdAsync(int accountId);
     }
 }

@@ -6,5 +6,6 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
     {
         Task<Result<AdminDashboardDto>> GetAdminSummaryAsync();
         Task<Result<CashierDashboardDto>> GetCashierSummaryAsync(string cashierId);
+        Task<Result<ClientProductsDto>> GetClientProductsAsync(string clientId);
     }
 }

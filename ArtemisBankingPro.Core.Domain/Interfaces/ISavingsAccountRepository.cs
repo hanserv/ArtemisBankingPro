@@ -8,5 +8,6 @@ namespace ArtemisBankingPro.Core.Domain.Interfaces
         Task<SavingsAccount?> GetPrincipalAccountByClientIdAsync(string clientId);
         Task<SavingsAccount?> GetByAccountNumberAsync(string accountNumber);
         Task<int> CountActiveAsync();
+        Task<List<SavingsAccount>> GetActiveByClientIdAsync(string clientId);
     }
 }

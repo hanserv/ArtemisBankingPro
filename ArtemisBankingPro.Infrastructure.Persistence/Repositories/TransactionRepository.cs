@@ -69,5 +69,13 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
 
             return await query.CountAsync();
         }
+
+        public async Task<List<Transaction>> GetByAccountIdAsync(int accountId)
+        {
+            return await _dbSet
+                    .Where(t => t.SavingsAccountId == accountId)
+                    .OrderByDescending(t => t.CreatedAt)
+                    .ToListAsync();
+        }
     }
 }

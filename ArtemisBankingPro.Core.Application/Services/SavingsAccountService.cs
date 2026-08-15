@@ -1,5 +1,6 @@
 ﻿using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.SavingsAccount;
+using ArtemisBankingPro.Core.Application.DTOs.Transaction;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Core.Domain.Common.Enums;
 using ArtemisBankingPro.Core.Domain.Entities;
@@ -372,6 +373,36 @@ namespace ArtemisBankingPro.Core.Application.Services
             _logger.LogInformation("Secondary account {AccountNumber} cancelled by administrator {AdminId}.", account.AccountNumber, performedByAdminId);
 
             return Result.Success(message: "The secondary savings account has been cancelled successfully.");
+        }
+
+        public async Task<Result<SavingsAccountDto>> GetClientAccountByIdAsync(int id, string clientId)
+        {
+            var account = await _savingsAccountRepository.GetAllQuery()
+                    .FirstOrDefaultAsync(a => a.Id == id && a.ClientId == clientId);
+
+            if (account is null)
+            {
+                return Result<SavingsAccountDto>.Failure(error: "The selected account does not exist.");
+            }
+
+            var dto = _mapper.Map<SavingsAccountDto>(account);
+
+            return Result<SavingsAccountDto>.Success(dto);
+        }
+
+        public async Task<Result<List<TransactionDto>>> GetClientAccountTransactionsAsync(int id, string clientId)
+        {
+            var accountExists = await _savingsAccountRepository.GetAllQuery()
+                    .AnyAsync(a => a.Id == id && a.ClientId == clientId);
+
+            if (!accountExists)
+            {
+                return Result<List<TransactionDto>>.Failure(error: "The selected account does not exist.");
+            }
+
+            var transactions = await _transactionRepository.GetByAccountIdAsync(id);
+
+            return Result<List<TransactionDto>>.Success(_mapper.Map<List<TransactionDto>>(transactions));
         }
     }
 }

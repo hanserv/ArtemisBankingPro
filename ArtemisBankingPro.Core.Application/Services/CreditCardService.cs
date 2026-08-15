@@ -271,6 +271,40 @@ namespace ArtemisBankingPro.Core.Application.Services
             return Result.Success(message: "The credit card has been cancelled successfully.");
         }
 
+        public async Task<Result<CreditCardDto>> GetClientCardByIdAsync(int id, string clientId)
+        {
+            var card = await _creditCardRepository.GetAllQuery()
+                .FirstOrDefaultAsync(c => c.Id == id && c.ClientId == clientId);
+
+            if (card is null)
+            {
+                return Result<CreditCardDto>.Failure(error: "The selected credit card does not exist.");
+            }
+
+            var dto = _mapper.Map<CreditCardDto>(card);
+
+            return Result<CreditCardDto>.Success(dto);
+        }
+
+        public async Task<Result<List<CardConsumptionDto>>> GetClientCardConsumptionsAsync(int id, string clientId)
+        {
+            var cardExists = await _creditCardRepository.GetAllQuery()
+                    .AnyAsync(c => c.Id == id && c.ClientId == clientId);
+
+            if (!cardExists)
+            {
+                return Result<List<CardConsumptionDto>>.Failure(error: "The selected credit card does not exist.");
+            }
+
+            var consumptions = await _creditCardRepository.GetAllQueryInclude(["Consumptions", "Consumptions.Commerce"])
+                    .Where(c => c.Id == id)
+                    .SelectMany(c => c.Consumptions!)
+                    .OrderByDescending(c => c.ConsumptionDate)
+                    .ToListAsync();
+
+            return Result<List<CardConsumptionDto>>.Success(_mapper.Map<List<CardConsumptionDto>>(consumptions));
+        }
+
         #region Private Methods
         private async Task<string> GenerateCardNumberAsync()
         {

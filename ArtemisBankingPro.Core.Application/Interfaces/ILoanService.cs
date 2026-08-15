@@ -10,6 +10,7 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
         Task<Result<AssignLoanResultDto>> AssignAsync(AssignLoanDto dto);
         Task<Result> ConfirmLoanPaymentAsync(LoanPaymentConfirmationDto dto, string cashierId);
         Task<Result<LoanDto>> GetByIdAsync(int id);
+        Task<Result<LoanDetailsDto>> GetClientLoanDetailsAsync(int id, string clientId);
         Task<Result<List<ClientForAssignmentDto>>> GetClientsEligibleForLoanAsync(string? identification);
         Task<Result<LoanDetailsDto>> GetDetailsAsync(int id);
         Task<Result<PagedResult<LoanDto>>> GetPagedAsync(LoanFilterDto filter);

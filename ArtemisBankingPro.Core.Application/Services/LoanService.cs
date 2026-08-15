@@ -545,6 +545,29 @@ namespace ArtemisBankingPro.Core.Application.Services
                 : "The payment was completed successfully, but the notification email could not be sent.");
         }
 
+        public async Task<Result<LoanDetailsDto>> GetClientLoanDetailsAsync(int id, string clientId)
+        {
+            var loan = await _loanRepository.GetAllQueryInclude(["Installments"])
+                        .FirstOrDefaultAsync(l => l.Id == id && l.ClientId == clientId);
+
+            if (loan is null)
+            {
+                return Result<LoanDetailsDto>.Failure("The requested loan does not exist.");
+            }
+
+            var loanDto = _mapper.Map<LoanDto>(loan);
+
+            var installments = loan.Installments
+                    .OrderBy(i => i.InstallmentNumber)
+                    .ToList();
+
+            return Result<LoanDetailsDto>.Success(new LoanDetailsDto
+            {
+                Loan = loanDto,
+                Installments = _mapper.Map<List<LoanInstallmentDto>>(installments)
+            });
+        }
+
         #region Private Methods
 
         private async Task<bool> TrySendApprovalEmailAsync(UserBasicInfoDto client, string loanNumber, decimal capitalAmount, int termInMonths,decimal annualRate, decimal monthlyInstallment)

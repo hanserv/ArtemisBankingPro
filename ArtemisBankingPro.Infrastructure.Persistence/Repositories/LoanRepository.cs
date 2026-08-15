@@ -29,5 +29,13 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
 
         public async Task<int> CountActiveAsync()
             => await _dbSet.CountAsync(a => a.Status == LoanStatus.Active);
+
+        public async Task<List<Loan>> GetActiveByClientIdAsync(string clientId)
+        {
+            return await _dbSet.Include(l => l.Installments)
+                .Where(l => l.ClientId == clientId && l.Status == LoanStatus.Active)
+                .OrderByDescending(l => l.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

@@ -8,6 +8,8 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
         Task<Result> AssignCreditCardAsync(AssignCreditCardDto dto, string createdByAdminId);
         Task<Result> CancelCreditCardAsync(int creditCardId, string performedByAdminId);
         Task<Result<CreditCardDto>> GetByIdAsync(int id);
+        Task<Result<CreditCardDto>> GetClientCardByIdAsync(int id, string clientId);
+        Task<Result<List<CardConsumptionDto>>> GetClientCardConsumptionsAsync(int id, string clientId);
         Task<Result<List<CardConsumptionDto>>> GetConsumptionsAsync(int creditCardId);
         Task<Result<PagedResult<CreditCardDto>>> GetPagedAsync(CreditCardFilterDto filter);
         Task<Result> ModifyCreditCardLimitAsync(ModifyCreditCardLimitDto dto, string performedByAdminId);

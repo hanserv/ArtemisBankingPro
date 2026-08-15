@@ -23,5 +23,14 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
 
         public async Task<SavingsAccount?> GetByAccountNumberAsync(string accountNumber)
             => await _dbSet.FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
+
+        public async Task<List<SavingsAccount>> GetActiveByClientIdAsync(string clientId)
+        {
+            return await _dbSet
+                .Where(a => a.ClientId == clientId && a.Status == SavingsAccountStatus.Active)
+                .OrderBy(a => a.Type == SavingsAccountType.Principal ? 0 : 1)
+                .ThenByDescending(a => a.Balance)
+                .ToListAsync();
+        }
     }
 }

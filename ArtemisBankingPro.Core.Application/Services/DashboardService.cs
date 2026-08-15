@@ -1,7 +1,11 @@
-﻿using ArtemisBankingPro.Core.Application.DTOs.Dashboard;
+﻿using ArtemisBankingPro.Core.Application.DTOs.CreditCard;
+using ArtemisBankingPro.Core.Application.DTOs.Dashboard;
+using ArtemisBankingPro.Core.Application.DTOs.Loan;
+using ArtemisBankingPro.Core.Application.DTOs.SavingsAccount;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Core.Domain.Common.Enums;
 using ArtemisBankingPro.Core.Domain.Interfaces;
+using MapsterMapper;
 
 namespace ArtemisBankingPro.Core.Application.Services
 {
@@ -13,10 +17,12 @@ namespace ArtemisBankingPro.Core.Application.Services
         private readonly ILoanRepository _loanRepository;
         private readonly ICreditCardRepository _creditCardRepository;
         private readonly IFinancialSummaryService _financialSummaryService;
+        private readonly IMapper _mapper;
 
-        public DashboardService(IBasicUserInfoService basicUserInfoService, ITransactionRepository transactionRepository, 
+        public DashboardService(IBasicUserInfoService basicUserInfoService, ITransactionRepository transactionRepository,
             ISavingsAccountRepository savingsAccountRepository, ILoanRepository loanRepository,
-            ICreditCardRepository creditCardRepository, IFinancialSummaryService financialSummaryService)
+            ICreditCardRepository creditCardRepository, IFinancialSummaryService financialSummaryService, 
+            IMapper mapper)
         {
             _basicUserInfoService = basicUserInfoService;
             _transactionRepository = transactionRepository;
@@ -24,6 +30,7 @@ namespace ArtemisBankingPro.Core.Application.Services
             _loanRepository = loanRepository;
             _creditCardRepository = creditCardRepository;
             _financialSummaryService = financialSummaryService;
+            _mapper = mapper;
         }
 
         public async Task<Result<AdminDashboardDto>> GetAdminSummaryAsync()
@@ -80,6 +87,20 @@ namespace ArtemisBankingPro.Core.Application.Services
             };
 
             return Result<CashierDashboardDto>.Success(dto);
+        }
+
+        public async Task<Result<ClientProductsDto>> GetClientProductsAsync(string clientId)
+        {
+            var accounts = await _savingsAccountRepository.GetActiveByClientIdAsync(clientId);
+            var loans = await _loanRepository.GetActiveByClientIdAsync(clientId);
+            var cards = await _creditCardRepository.GetActiveByClientIdAsync(clientId);
+
+            return Result<ClientProductsDto>.Success(new ClientProductsDto
+            {
+                SavingsAccounts = _mapper.Map<List<SavingsAccountDto>>(accounts),
+                Loans = _mapper.Map<List<LoanDto>>(loans),
+                CreditCards = _mapper.Map<List<CreditCardDto>>(cards)
+            });
         }
     }
 }
