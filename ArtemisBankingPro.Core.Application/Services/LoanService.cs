@@ -28,13 +28,12 @@ namespace ArtemisBankingPro.Core.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<LoanService> _logger;
-        private readonly IAccountServiceForWebApp _accountService;
 
         public LoanService(ILoanRepository loanRepository, ISavingsAccountRepository savingsAccountRepository,
             ITransactionRepository transactionRepository, IFinancialSummaryService financialSummaryService,
             IBasicUserInfoService basicUserInfoService, ILoanNumberGenerator loanNumberGenerator,
             IEmailService emailService, IUnitOfWork unitOfWork,
-            IMapper mapper, ILogger<LoanService> logger, IAccountServiceForWebApp accountService)
+            IMapper mapper, ILogger<LoanService> logger)
         {
             _loanRepository = loanRepository;
             _savingsAccountRepository = savingsAccountRepository;
@@ -46,7 +45,6 @@ namespace ArtemisBankingPro.Core.Application.Services
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
-            _accountService = accountService;
         }
 
         public async Task<Result<LoanDto>> GetByIdAsync(int id)
@@ -164,23 +162,35 @@ namespace ArtemisBankingPro.Core.Application.Services
 
         public async Task<Result<List<ClientForAssignmentDto>>> GetClientsEligibleForLoanAsync(string? identification)
         {
-            var clientsResult = await _accountService.GetClientsForAssignmentAsync(identification);
-
-            if (!clientsResult.IsSuccess)
-            {
-                return clientsResult;
-            }
+            var activeClients = await _basicUserInfoService.GetActiveClientsAsync(identification);
 
             var clientIdsWithActiveLoan = await _loanRepository.GetAllQuery()
-                .Where(l => l.Status == LoanStatus.Active)
-                .Select(l => l.ClientId)
-                .ToListAsync();
+                    .Where(l => l.Status == LoanStatus.Active)
+                    .Select(l => l.ClientId)
+                    .ToListAsync();
 
-            var eligibleClients = clientsResult.Value!
-                .Where(c => !clientIdsWithActiveLoan.Contains(c.Id))
-                .ToList();
+            var items = new List<ClientForAssignmentDto>();
 
-            return Result<List<ClientForAssignmentDto>>.Success(eligibleClients);
+            foreach (var client in activeClients)
+            {
+                if (clientIdsWithActiveLoan.Contains(client.Id))
+                {
+                    continue;
+                }
+
+                var totalDebt = await _financialSummaryService.GetTotalDebtByClientAsync(client.Id);
+
+                items.Add(new ClientForAssignmentDto
+                {
+                    Id = client.Id,
+                    Identification = client.Identification,
+                    FullName = client.FullName,
+                    Email = client.Email,
+                    TotalDebt = totalDebt
+                });
+            }
+
+            return Result<List<ClientForAssignmentDto>>.Success(items);
         }
 
         public async Task<Result<List<LoanDto>>> GetActiveLoansByClientIdAsync(string clientId)

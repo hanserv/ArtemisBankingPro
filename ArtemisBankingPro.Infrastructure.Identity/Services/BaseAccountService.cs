@@ -6,6 +6,7 @@ using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.Email;
 using ArtemisBankingPro.Core.Application.DTOs.User;
 using ArtemisBankingPro.Core.Application.Interfaces;
+using ArtemisBankingPro.Core.Application.Services;
 using ArtemisBankingPro.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -20,14 +21,17 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
         protected readonly IEmailService _emailService;
         protected readonly ISavingsAccountService _savingsAccountService;
         protected readonly ILogger<BaseAccountService> _logger;
+        private readonly IFinancialSummaryService _financialSummaryService;
 
         public BaseAccountService(UserManager<AppUser> userManager, IEmailService emailService,
-            ISavingsAccountService savingsAccountService, ILogger<BaseAccountService> logger)
+            ISavingsAccountService savingsAccountService, ILogger<BaseAccountService> logger,
+            IFinancialSummaryService financialSummaryService)
         {
             _userManager = userManager;
             _emailService = emailService;
             _savingsAccountService = savingsAccountService;
             _logger = logger;
+            _financialSummaryService = financialSummaryService;
         }
 
         public virtual async Task<Result<PagedResult<UserDto>>> GetAllUsersAsync(int page, int pageSize, string? role)
@@ -479,6 +483,44 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             return Result.Success(message: "Your password has been successfully reset. You can now log in.");
         }
 
+        public async Task<Result<List<ClientForAssignmentDto>>> GetClientsForAssignmentAsync(string? identification)
+        {
+            var allClients = await _userManager.GetUsersInRoleAsync("Client");
+            var activeClients = allClients.Where(c => c.IsActive);
+
+            if (!string.IsNullOrWhiteSpace(identification))
+            {
+                activeClients = activeClients.Where(c => c.Identification.Contains(identification));
+            }
+
+            var clients = activeClients
+                .Select(c => new UserBasicInfoDto
+                {
+                    Id = c.Id,
+                    Identification = c.Identification,
+                    FullName = $"{c.FirstName} {c.LastName}",
+                    Email = c.Email!
+                })
+                .ToList();
+
+            var items = new List<ClientForAssignmentDto>();
+            foreach (var client in clients)
+            {
+                var totalDebt = await _financialSummaryService.GetTotalDebtByClientAsync(client.Id);
+
+                items.Add(new ClientForAssignmentDto
+                {
+                    Id = client.Id,
+                    Identification = client.Identification,
+                    FullName = client.FullName,
+                    Email = client.Email,
+                    TotalDebt = totalDebt
+                });
+            }
+
+            return Result<List<ClientForAssignmentDto>>.Success(items);
+        }
+
         #region Private Methods
         private Result ValidateUserFields(string userName, string firstName, string lastName)
         {
@@ -542,13 +584,22 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             if (isApi)
             {
+                var compositeToken = $"{user.Id}|{token}";
+
+                var encodedComposite = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(compositeToken));
+
                 await _emailService.SendAsync(new EmailRequestDto
                 {
                     To = user.Email!,
                     Subject = "Account Activation Token",
-                    BodyHtml = $"Your Artemis Banking account has been created successfully. " +
-                               $"Use the following token to activate your account through the corresponding endpoint: {token}"
+                    BodyHtml = $"""
+                        Hello {user.FirstName} {user.LastName},
+                        <p>Your Artemis Banking account has been created successfully.</p>
+                        <p>Use the following token to activate your account:</p>
+                        <p>{encodedComposite}</p>
+                    """
                 });
+
                 return;
             }
 
