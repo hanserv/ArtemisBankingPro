@@ -9,6 +9,7 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
     {
         Task<Result<AssignLoanResultDto>> AssignAsync(AssignLoanDto dto);
         Task<Result> ConfirmLoanPaymentAsync(LoanPaymentConfirmationDto dto, string cashierId);
+        Task<Result<List<LoanDto>>> GetActiveLoansByClientIdAsync(string clientId);
         Task<Result<LoanDto>> GetByIdAsync(int id);
         Task<Result<LoanDetailsDto>> GetClientLoanDetailsAsync(int id, string clientId);
         Task<Result<List<ClientForAssignmentDto>>> GetClientsEligibleForLoanAsync(string? identification);
@@ -16,6 +17,7 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
         Task<Result<PagedResult<LoanDto>>> GetPagedAsync(LoanFilterDto filter);
         Task<int> MarkOverdueInstallmentsAsync();
         Task<Result> ModifyRateAsync(ModifyLoanRateDto dto, string performedByAdminId);
+        Task<Result> PayLoanAsync(ClientLoanPaymentDto dto, string clientId);
         Task<Result> ValidateClientForAssignmentAsync(string? clientId);
         Task<Result<LoanPaymentConfirmationDto>> ValidateLoanPaymentAsync(LoanPaymentDto dto, string cashierId);
     }

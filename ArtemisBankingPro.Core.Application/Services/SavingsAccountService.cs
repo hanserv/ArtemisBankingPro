@@ -52,6 +52,12 @@ namespace ArtemisBankingPro.Core.Application.Services
             return Result<SavingsAccountDto>.Success(dto);
         }
 
+        public async Task<Result<List<SavingsAccountDto>>> GetActiveAccountsByClientIdAsync(string clientId)
+        {
+            var accounts = await _savingsAccountRepository.GetActiveByClientIdAsync(clientId);
+            return Result<List<SavingsAccountDto>>.Success(_mapper.Map<List<SavingsAccountDto>>(accounts));
+        }
+
         public async Task<Result> CreatePrincipalAccountAsync(string clientId, decimal initialAmount)
         {
             if (initialAmount < 0)

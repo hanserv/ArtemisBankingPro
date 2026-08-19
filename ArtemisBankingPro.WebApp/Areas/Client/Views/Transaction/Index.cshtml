@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "Transactions";
+}
+
+<div>
+    <div class="d-flex justify-content-between gap-2 mb-3">
+        <a asp-area="Client" asp-controller="Home" asp-action="Index" class="btn btn-outline-dark fw-semibold">
+            <i class="bi bi-arrow-left"></i> Go back
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-dark text-white">
+            <h2 class="fs-5 m-0">
+                <i class="bi bi-arrow-left-right"></i> Transactions
+            </h2>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-0">Select the type of transaction you want to perform.</p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-6 col-md-4">
+            <a asp-area="Client" asp-controller="Transaction" asp-action="Express" class="text-decoration-none">
+                <div class="card card-option shadow-sm border-0 h-100 text-center">
+                    <div class="card-body py-4">
+                        <i class="bi bi-lightning-charge fs-1 text-dark"></i>
+                        <p class="fw-semibold mt-2 mb-0">Express</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4">
+            <a asp-area="Client" asp-controller="Transaction" asp-action="CreditCardPayment" class="text-decoration-none">
+                <div class="card card-option shadow-sm border-0 h-100 text-center">
+                    <div class="card-body py-4">
+                        <i class="bi bi-credit-card fs-1 text-dark"></i>
+                        <p class="fw-semibold mt-2 mb-0">Credit Card Payment</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4">
+            <a asp-area="Client" asp-controller="Transaction" asp-action="LoanPayment" class="text-decoration-none">
+                <div class="card card-option shadow-sm border-0 h-100 text-center">
+                    <div class="card-body py-4">
+                        <i class="bi bi-cash-stack fs-1 text-dark"></i>
+                        <p class="fw-semibold mt-2 mb-0">Loan Payment</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4">
+            <a asp-area="Client" asp-controller="Transaction" asp-action="BeneficiaryTransaction" class="text-decoration-none">
+                <div class="card card-option shadow-sm border-0 h-100 text-center">
+                    <div class="card-body py-4">
+                        <i class="bi bi-people fs-1 text-dark"></i>
+                        <p class="fw-semibold mt-2 mb-0">Beneficiary Transfer</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4">
+            <a asp-area="Client" asp-controller="Transaction" asp-action="CashAdvance" class="text-decoration-none">
+                <div class="card card-option shadow-sm border-0 h-100 text-center">
+                    <div class="card-body py-4">
+                        <i class="bi bi-cash-coin fs-1 text-dark"></i>
+                        <p class="fw-semibold mt-2 mb-0">Cash Advance</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4">
+            <a asp-area="Client" asp-controller="Transaction" asp-action="OwnAccountTransfer" class="text-decoration-none">
+                <div class="card card-option shadow-sm border-0 h-100 text-center">
+                    <div class="card-body py-4">
+                        <i class="bi bi-arrow-left-right fs-1 text-dark"></i>
+                        <p class="fw-semibold mt-2 mb-0">Transfer Between My Accounts</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card-option {
+            transition: all .2s ease-in-out;
+        }
+
+        .card-option:hover {
+            transform: translateY(-4px);
+        }
+    </style>
+}

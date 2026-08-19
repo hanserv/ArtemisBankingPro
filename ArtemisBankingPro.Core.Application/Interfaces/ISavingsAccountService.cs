@@ -15,5 +15,6 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
         Task<Result> CancelSecondaryAccountAsync(int accountId, string performedByAdminId);
         Task<Result<SavingsAccountDto>> GetClientAccountByIdAsync(int id, string clientId);
         Task<Result<List<TransactionDto>>> GetClientAccountTransactionsAsync(int id, string clientId);
+        Task<Result<List<SavingsAccountDto>>> GetActiveAccountsByClientIdAsync(string clientId);
     }
 }

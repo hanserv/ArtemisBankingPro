@@ -138,6 +138,12 @@ namespace ArtemisBankingPro.Core.Application.Services
             return Result<List<CardConsumptionDto>>.Success(_mapper.Map<List<CardConsumptionDto>>(consumptions));
         }
 
+        public async Task<Result<List<CreditCardDto>>> GetActiveCardsByClientIdAsync(string clientId)
+        {
+            var cards = await _creditCardRepository.GetActiveByClientIdAsync(clientId);
+            return Result<List<CreditCardDto>>.Success(_mapper.Map<List<CreditCardDto>>(cards));
+        }
+
         public async Task<Result> ValidateClientForAssignmentAsync(string? clientId)
         {
             if (string.IsNullOrWhiteSpace(clientId))

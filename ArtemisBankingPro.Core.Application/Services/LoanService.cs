@@ -183,6 +183,12 @@ namespace ArtemisBankingPro.Core.Application.Services
             return Result<List<ClientForAssignmentDto>>.Success(eligibleClients);
         }
 
+        public async Task<Result<List<LoanDto>>> GetActiveLoansByClientIdAsync(string clientId)
+        {
+            var loans = await _loanRepository.GetActiveByClientIdAsync(clientId);
+            return Result<List<LoanDto>>.Success(_mapper.Map<List<LoanDto>>(loans));
+        }
+
         public async Task<Result<AssignLoanResultDto>> AssignAsync(AssignLoanDto dto)
         {
             if (!AllowedTerms.Contains(dto.TermInMonths))
@@ -408,8 +414,7 @@ namespace ArtemisBankingPro.Core.Application.Services
                 return Result<LoanPaymentConfirmationDto>.Failure("The loan number entered does not correspond to a valid loan.");
             }
 
-            var loan = await _loanRepository.GetAllQuery()
-                .Include(l => l.Installments)
+            var loan = await _loanRepository.GetAllQueryInclude(["Installments"])
                 .FirstOrDefaultAsync(l => l.LoanNumber == dto.LoanNumber);
 
             if (loan is null || loan.Status != LoanStatus.Active)
@@ -467,9 +472,8 @@ namespace ArtemisBankingPro.Core.Application.Services
                 return Result.Failure("The account number entered does not correspond to a valid account.");
             }
 
-            var loan = await _loanRepository.GetAllQuery()
-                .Include(l => l.Installments)
-                .FirstOrDefaultAsync(l => l.LoanNumber == dto.LoanNumber);
+            var loan = await _loanRepository.GetAllQueryInclude(["Installments"])
+                    .FirstOrDefaultAsync(l => l.LoanNumber == dto.LoanNumber);
 
             if (loan is null || loan.Status != LoanStatus.Active)
             {
@@ -484,9 +488,9 @@ namespace ArtemisBankingPro.Core.Application.Services
             }
 
             var pendingInstallments = loan.Installments
-                .Where(i => i.Status != InstallmentStatus.Paid)
-                .OrderBy(i => i.InstallmentNumber)
-                .ToList();
+                    .Where(i => i.Status != InstallmentStatus.Paid)
+                    .OrderBy(i => i.InstallmentNumber)
+                    .ToList();
 
             if (pendingInstallments.Count == 0)
             {
@@ -566,6 +570,88 @@ namespace ArtemisBankingPro.Core.Application.Services
                 Loan = loanDto,
                 Installments = _mapper.Map<List<LoanInstallmentDto>>(installments)
             });
+        }
+
+        public async Task<Result> PayLoanAsync(ClientLoanPaymentDto dto, string clientId)
+        {
+            var loan = await _loanRepository.GetAllQueryInclude(["Installments"])
+                        .FirstOrDefaultAsync(l => l.Id == dto.LoanId);
+
+            if (loan is null || loan.ClientId != clientId || loan.Status != LoanStatus.Active)
+            {
+                return Result.Failure("The selected loan is not valid.");
+            }
+
+            var sourceAccount = await _savingsAccountRepository.GetByAccountNumberAsync(dto.SourceAccountNumber);
+            if (sourceAccount is null || sourceAccount.ClientId != clientId || sourceAccount.Status != SavingsAccountStatus.Active)
+            {
+                return Result.Failure("The selected source account is not valid.");
+            }
+
+            if (dto.Amount <= 0)
+            {
+                return Result.Failure("The payment amount must be greater than zero.");
+            }
+
+            var pendingInstallments = loan.Installments
+                    .Where(i => i.Status != InstallmentStatus.Paid)
+                    .OrderBy(i => i.InstallmentNumber)
+                    .ToList();
+
+            if (pendingInstallments.Count == 0)
+            {
+                return Result.Failure("The selected loan has no pending installments.");
+            }
+
+            var effectiveAmount = Math.Min(dto.Amount, loan.PendingAmount);
+
+            if (sourceAccount.Balance < effectiveAmount)
+            {
+                await LogRejectedClientLoanPaymentAsync(sourceAccount, loan.LoanNumber, dto.Amount, clientId);
+                return Result.Failure("You do not have the required amount in the selected account.");
+            }
+
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                sourceAccount.Balance -= effectiveAmount;
+                await _savingsAccountRepository.UpdateAsync(sourceAccount);
+
+                ApplyPaymentToInstallments(pendingInstallments, effectiveAmount);
+
+                if (loan.Installments.All(i => i.Status == InstallmentStatus.Paid))
+                {
+                    loan.Status = LoanStatus.Completed;
+                }
+
+                loan.PendingAmount = loan.Installments
+                    .Where(i => i.Status != InstallmentStatus.Paid)
+                    .Sum(i => i.RemainingBalance);
+
+                await _loanRepository.UpdateAsync(loan);
+
+                await _transactionRepository.AddAsync(new Transaction
+                {
+                    Id = 0,
+                    SavingsAccountId = sourceAccount.Id,
+                    Amount = effectiveAmount,
+                    Type = TransactionType.Debit,
+                    Category = TransactionCategory.LoanPayment,
+                    Origin = sourceAccount.AccountNumber,
+                    Beneficiary = loan.LoanNumber,
+                    Status = TransactionStatus.Approved,
+                    PerformedByUserId = clientId,
+                    CreatedAt = DateTime.UtcNow
+                });
+            });
+
+            _logger.LogInformation("Loan payment of {Amount:C} applied to loan {LoanNumber} from account ending in {LastFourDigits} by client {ClientId}.",
+                effectiveAmount, loan.LoanNumber, sourceAccount.AccountNumber[^4..], clientId);
+
+            var emailSent = await TrySendClientLoanPaymentEmailAsync(sourceAccount, loan, effectiveAmount);
+
+            return Result.Success(emailSent
+                ? "The payment was completed successfully."
+                : "The payment was completed successfully, but the notification email could not be sent.");
         }
 
         #region Private Methods
@@ -749,6 +835,62 @@ namespace ArtemisBankingPro.Core.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to send loan payment email(s) for loan {LoanNumber}.", loan.LoanNumber);
+                return false;
+            }
+        }
+
+        private async Task LogRejectedClientLoanPaymentAsync(SavingsAccount account, string loanNumber, decimal amount, string clientId)
+        {
+            await _transactionRepository.AddAsync(new Transaction
+            {
+                Id = 0,
+                SavingsAccountId = account.Id,
+                Amount = amount,
+                Type = TransactionType.Debit,
+                Category = TransactionCategory.LoanPayment,
+                Origin = account.AccountNumber,
+                Beneficiary = loanNumber,
+                Status = TransactionStatus.Rejected,
+                PerformedByUserId = clientId,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            _logger.LogWarning("Loan payment attempt of {Amount:C} from account ending in {LastFourDigits} to loan {LoanNumber} was rejected due to insufficient funds. Client: {ClientId}.",
+                amount, account.AccountNumber[^4..], loanNumber, clientId);
+        }
+
+        private async Task<bool> TrySendClientLoanPaymentEmailAsync(SavingsAccount account, Loan loan, decimal amount)
+        {
+            var client = await _basicUserInfoService.GetBasicInfoAsync(account.ClientId);
+            var accountLastFour = account.AccountNumber[^4..];
+            var performedAt = DateTime.UtcNow;
+
+            try
+            {
+                var result = await _emailService.SendAsync(new EmailRequestDto
+                {
+                    To = client!.Email,
+                    Subject = $"Payment made to loan {loan.LoanNumber}",
+                    BodyHtml = $"""
+                        <h3 style="font-weight: normal;">Hello <span style="font-weight: bold;">{client.FullName}</span></h3>
+                        <p>A payment has been made to your loan <strong>{loan.LoanNumber}</strong>.</p>
+                        <p>Amount paid: <strong>RD$ {amount:N2}</strong></p>
+                        <p>Source account ending in: <strong>{accountLastFour}</strong></p>
+                        <p>Date and time: <strong>{performedAt:MM/dd/yyyy hh:mm tt}</strong></p>
+                        <p style="font-size: 14px; color: #6c757d;">If you do not recognize this operation, please contact the bank.</p>
+                    """
+                });
+
+                if (!result.IsSuccess)
+                {
+                    _logger.LogWarning("Loan payment email for loan {LoanNumber} was not sent: {Error}", loan.LoanNumber, result.Error);
+                }
+
+                return result.IsSuccess;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send loan payment email for loan {LoanNumber}.", loan.LoanNumber);
                 return false;
             }
         }

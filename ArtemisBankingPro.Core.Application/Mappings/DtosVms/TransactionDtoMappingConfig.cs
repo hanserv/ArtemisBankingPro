@@ -29,6 +29,24 @@ namespace ArtemisBankingPro.Core.Application.Mappings.DtosVms
             config.NewConfig<LoanPaymentViewModel, LoanPaymentDto>();
             config.NewConfig<LoanPaymentConfirmationDto, LoanPaymentConfirmationViewModel>();
             config.NewConfig<LoanPaymentConfirmationViewModel, LoanPaymentConfirmationDto>();
+
+            config.NewConfig<ExpressTransactionViewModel, ExpressTransactionDto>();
+            config.NewConfig<ExpressTransactionConfirmationDto, ExpressTransactionConfirmationViewModel>();
+            config.NewConfig<ExpressTransactionConfirmationViewModel, ExpressTransactionConfirmationDto>();
+
+            config.NewConfig<ClientCreditCardPaymentViewModel, ClientCreditCardPaymentDto>();
+
+            config.NewConfig<ClientLoanPaymentViewModel, ClientLoanPaymentDto>();
+
+            config.NewConfig<BeneficiaryTransactionViewModel, BeneficiaryTransactionDto>();
+            config.NewConfig<BeneficiaryTransactionConfirmationDto, BeneficiaryTransactionConfirmationViewModel>();
+            config.NewConfig<BeneficiaryTransactionConfirmationViewModel, BeneficiaryTransactionConfirmationDto>();
+
+            config.NewConfig<OwnAccountTransferViewModel, OwnAccountTransferDto>();
+            config.NewConfig<OwnAccountTransferConfirmationDto, OwnAccountTransferConfirmationViewModel>();
+            config.NewConfig<OwnAccountTransferConfirmationViewModel, OwnAccountTransferConfirmationDto>();
+
+            config.NewConfig<CashAdvanceViewModel, CashAdvanceDto>();
         }
     }
 }
