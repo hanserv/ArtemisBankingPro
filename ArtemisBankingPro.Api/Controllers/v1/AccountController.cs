@@ -1,4 +1,5 @@
 ﻿using ArtemisBankingPro.Core.Application.DTOs.User;
+using ArtemisBankingPro.Core.Application.Exceptions;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
@@ -57,7 +58,7 @@ namespace ArtemisBankingPro.Api.Controllers.v1
 
             if(!result.IsSuccess)
             {
-                return BadRequest(new { error = result.Error });
+                throw new ApiException(result.Error!, result.StatusCode);
             }
 
             return NoContent();
@@ -76,7 +77,7 @@ namespace ArtemisBankingPro.Api.Controllers.v1
 
             if(!result.IsSuccess)
             {
-                return BadRequest(new { error = result.Error });
+                throw new ApiException(result.Error!, result.StatusCode);
             }
 
             return NoContent();

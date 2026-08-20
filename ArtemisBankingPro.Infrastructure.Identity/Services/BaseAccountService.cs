@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Net;
 using System.Text;
 using ArtemisBankingPro.Core.Application;
 using ArtemisBankingPro.Core.Application.DTOs;
@@ -161,19 +162,19 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             if (await _userManager.FindByEmailAsync(registerDto.Email) is not null)
             {
                 _logger.LogWarning("User registration rejected: email {Email} is already registered.", registerDto.Email);
-                return Result<RegisterResponseDto>.Failure(error: "A user with this email address is already registered.");
+                return Result<RegisterResponseDto>.Failure(error: "A user with this email address is already registered.", statusCode: (int)HttpStatusCode.Conflict);
             }
 
             if (await _userManager.FindByNameAsync(registerDto.UserName) is not null)
             {
                 _logger.LogWarning("User registration rejected: username {UserName} is already registered.", registerDto.UserName);
-                return Result<RegisterResponseDto>.Failure(error: "A user with this username is already registered.");
+                return Result<RegisterResponseDto>.Failure(error: "A user with this username is already registered.", statusCode: (int)HttpStatusCode.Conflict);
             }
 
             if (await _userManager.Users.AnyAsync(u => u.Identification == registerDto.Identification))
             {
                 _logger.LogWarning("User registration rejected: identification {Identification} is already registered.", registerDto.Identification);
-                return Result<RegisterResponseDto>.Failure(error: "A user with this identification is already registered.");
+                return Result<RegisterResponseDto>.Failure(error: "A user with this identification is already registered.", statusCode: (int)HttpStatusCode.Conflict);
             }
 
             var user = new AppUser
@@ -240,7 +241,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             var user = await _userManager.FindByIdAsync(updateDto.Id);
             if (user is null)
             {
-                return Result.Failure(error: "The selected user does not exist.");
+                return Result.Failure(error: "The selected user does not exist.", statusCode: (int)HttpStatusCode.NotFound);
             }
 
             if (string.IsNullOrWhiteSpace(updateDto.FirstName))
@@ -261,7 +262,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             if (await _userManager.Users.AnyAsync(u => u.Identification == updateDto.Identification && u.Id != updateDto.Id))
             {
                 _logger.LogWarning("User update rejected for {UserId}: identification {Identification} already belongs to another user.", updateDto.Id, updateDto.Identification);
-                return Result.Failure(error: "There is already another registered user with this identification.");
+                return Result.Failure(error: "There is already another registered user with this identification.", statusCode: (int)HttpStatusCode.Conflict);
             }
 
             if (string.IsNullOrWhiteSpace(updateDto.Email))
@@ -278,7 +279,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             if (existingByEmail is not null && existingByEmail.Id != updateDto.Id)
             {
                 _logger.LogWarning("User update rejected for {UserId}: email {Email} already belongs to another user.", updateDto.Id, updateDto.Email);
-                return Result.Failure(error: "There is already another registered user with this email.");
+                return Result.Failure(error: "There is already another registered user with this email.", statusCode: (int)HttpStatusCode.Conflict);
             }
 
             if (string.IsNullOrWhiteSpace(updateDto.UserName))
@@ -290,7 +291,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             if (existingByUserName is not null && existingByUserName.Id != updateDto.Id)
             {
                 _logger.LogWarning("User update rejected for {UserId}: username {UserName} already belongs to another user.", updateDto.Id, updateDto.UserName);
-                return Result.Failure(error: "There is already another registered user with this username.");
+                return Result.Failure(error: "There is already another registered user with this username.", statusCode: (int)HttpStatusCode.Conflict);
             }
 
             if (!string.IsNullOrWhiteSpace(updateDto.Password) || !string.IsNullOrWhiteSpace(updateDto.ConfirmPassword))
@@ -373,7 +374,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             var user = await _userManager.FindByIdAsync(userId);
             if (user is null)
             {
-                return Result.Failure(error: "The selected user does not exist.");
+                return Result.Failure(error: "The selected user does not exist.", statusCode: (int)HttpStatusCode.NotFound);
             }
 
             user.IsActive = isActive;
@@ -402,7 +403,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             if (user is null)
             {
-                return Result.Failure(error: "There is no registered user with this username.");
+                return Result.Failure(error: "There is no registered user with this username.", statusCode: (int)HttpStatusCode.NotFound);
             }
 
             if (string.IsNullOrWhiteSpace(user.Email))
@@ -415,7 +416,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             if (!userRoles.Any(r => allowedRoles.Contains(r)))
             {
-                return Result.Failure(error: "This user does not have a role permitted for this reset flow.");
+                return Result.Failure(error: "This user does not have a role permitted for this reset flow.", statusCode: (int)HttpStatusCode.Forbidden);
             }
 
             user.IsActive = false;
@@ -459,7 +460,7 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             if (user is null)
             {
-                return Result.Failure(error: "No account was found with the information provided.");
+                return Result.Failure(error: "No account was found with the information provided.", statusCode: (int)HttpStatusCode.NotFound);
             }
 
             var token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token));

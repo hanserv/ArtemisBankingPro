@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.User;
+using ArtemisBankingPro.Core.Application.Exceptions;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using Asp.Versioning;
 using MapsterMapper;
@@ -37,9 +38,9 @@ namespace ArtemisBankingPro.Api.Controllers.v1
         {
             var result = await _accountService.GetAllUsersAsync(filter);
 
-            if(!result.IsSuccess)
+            if (!result.IsSuccess)
             {
-                return BadRequest(new { error = result.Error });
+                throw new ApiException(result.Error!, result.StatusCode);
             }
 
             return Ok(result.Value);
@@ -76,7 +77,7 @@ namespace ArtemisBankingPro.Api.Controllers.v1
 
             if (!result.IsSuccess)
             {
-                return BadRequest(new { error = result.Error });
+                throw new ApiException(result.Error!, result.StatusCode);
             }
 
             return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
@@ -112,7 +113,14 @@ namespace ArtemisBankingPro.Api.Controllers.v1
         {
             dto.Id = id;
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            await _accountService.EditUserAsync(dto, currentUserId);
+
+            var result = await _accountService.EditUserAsync(dto, currentUserId);
+
+            if (!result.IsSuccess)
+            {
+                throw new ApiException(result.Error!, result.StatusCode);
+            }
+
             return NoContent();
         }
 
@@ -129,7 +137,14 @@ namespace ArtemisBankingPro.Api.Controllers.v1
         public async Task<IActionResult> ChangeStatus(string id, [FromBody] bool status)
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            await _accountService.ChangeUserStatusAsync(id, status, currentUserId);
+
+            var result = await _accountService.ChangeUserStatusAsync(id, status, currentUserId);
+
+            if (!result.IsSuccess)
+            {
+                throw new ApiException(result.Error!, result.StatusCode);
+            }
+
             return NoContent();
         }
 
