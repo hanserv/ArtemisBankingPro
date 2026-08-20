@@ -27,16 +27,9 @@ namespace ArtemisBankingPro.Api.Controllers.v1
             Summary = "Get all loans",
             Description = "Retrieves a paginated list of all loans in the system."
         )]
-        public async Task<IActionResult> GetAll(LoanFilterDto filter)
+        public async Task<IActionResult> GetAll([FromQuery] GetAllLoansQuery query)
         {
-            var loans = await Mediator.Send(new GetAllLoansQuery()
-            {
-                Page = filter.Page,
-                PageSize = filter.PageSize,
-                Identification = filter.Identification,
-                Status = filter.Status
-            });
-
+            var loans = await Mediator.Send(query);
             return Ok(loans);
         }
 

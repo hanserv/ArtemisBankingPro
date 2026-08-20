@@ -10,6 +10,7 @@ namespace ArtemisBankingPro.Core.Application.Mappings.EntitiesDtos
         {
             config.NewConfig<CreditCard, CreditCardDto>()
                 .Map(dest => dest.LastFourDigits, src => src.CardNumber.Substring(src.CardNumber.Length - 4))
+                .Map(dest => dest.MaskedCardNumber, src => new string('*', 12) + src.CardNumber.Substring(src.CardNumber.Length - 4))
                 .Ignore(dest => dest.ClientFullName)
                 .Ignore(dest => dest.CreatedByAdminName);
         }

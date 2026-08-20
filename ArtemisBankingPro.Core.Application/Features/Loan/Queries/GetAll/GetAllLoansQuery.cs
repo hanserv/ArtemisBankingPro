@@ -1,21 +1,33 @@
-﻿using System.Net;
-using ArtemisBankingPro.Core.Application.DTOs;
+﻿using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.Loan;
-using ArtemisBankingPro.Core.Application.Exceptions;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Core.Domain.Common.Enums;
 using ArtemisBankingPro.Core.Domain.Interfaces;
 using MapsterMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace ArtemisBankingPro.Core.Application.Features.Loan.Queries.GetAll
 {
+    /// <summary>
+    /// Filter parameters for retrieving the paginated list of loans.
+    /// </summary>
     public class GetAllLoansQuery : IRequest<PagedResult<LoanDto>>
     {
+        /// <example>1</example>
+        [SwaggerParameter(Description = "Page number to retrieve.")]
         public int Page { get; set; } = 1;
+
+        /// <example>20</example>
+        [SwaggerParameter(Description = "Number of records per page. Maximum allowed is 20.")]
         public int PageSize { get; set; } = 20;
+
+        /// <example>Active</example>
+        [SwaggerParameter(Description = "Optional status filter.")]
         public LoanStatus? Status { get; set; } = LoanStatus.Active;
+
+        [SwaggerParameter(Description = "Optional client identification to search loans for a specific client.")]
         public string? Identification { get; set; }
     }
 

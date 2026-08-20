@@ -4,6 +4,7 @@ namespace ArtemisBankingPro.Core.Application.DTOs.CreditCard
 {
     public class CreditCardDto : BaseDto<int>
     {
+        public required string MaskedCardNumber { get; set; }
         public required string LastFourDigits { get; set; }
         public required string ClientId { get; set; }
         public required string ClientFullName { get; set; }
