@@ -12,10 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Loan\Commands\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="Mapster" Version="10.0.11" />
@@ -30,6 +26,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ArtemisBankingPro.Core.Domain\ArtemisBankingPro.Core.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\SavingsAccount\Commands\" />
+    <Folder Include="Features\SavingsAccount\Queries\" />
   </ItemGroup>
 
 </Project>

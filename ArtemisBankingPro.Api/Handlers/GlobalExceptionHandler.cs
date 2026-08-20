@@ -21,6 +21,26 @@ namespace ArtemisBankingPro.Api.Handlers
 
             switch (exception)
             {
+                case HighRiskLoanException highRiskException:
+                    httpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
+                    var problemDetailsWithRisk = new ProblemDetails
+                    {
+                        Title = "Conflict",
+                        Status = httpContext.Response.StatusCode,
+                        Detail = highRiskException.Message,
+                        Instance = httpContext.Request.Path,
+                    };
+                    problemDetailsWithRisk.Extensions["riskType"] = highRiskException.RiskType;
+                    problemDetailsWithRisk.Extensions["currentDebt"] = highRiskException.CurrentDebt;
+                    problemDetailsWithRisk.Extensions["projectedDebt"] = highRiskException.ProjectedDebt;
+                    problemDetailsWithRisk.Extensions["averageDebt"] = highRiskException.AverageDebt;
+
+                    _logger.LogWarning(highRiskException, "Handled exception on {Path}: {Title}.", httpContext.Request.Path, "Conflict");
+
+                    httpContext.Response.ContentType = "application/problem+json";
+                    await httpContext.Response.WriteAsJsonAsync(problemDetailsWithRisk, cancellationToken: cancellationToken);
+                    return true;
+
                 case ApiException apiException:
                     switch (apiException.StatusCode)
                     {
@@ -39,6 +59,10 @@ namespace ArtemisBankingPro.Api.Handlers
                         case (int)HttpStatusCode.Forbidden:
                             exceptionTitle = "Forbidden";
                             httpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                            break;
+                        case (int)HttpStatusCode.Conflict:
+                            exceptionTitle = "Conflict";
+                            httpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
                             break;
                         default:
                             httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;

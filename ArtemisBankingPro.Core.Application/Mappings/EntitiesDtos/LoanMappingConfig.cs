@@ -1,4 +1,5 @@
 ﻿using ArtemisBankingPro.Core.Application.DTOs.Loan;
+using ArtemisBankingPro.Core.Application.Features.Loan.Commands.Asign;
 using ArtemisBankingPro.Core.Domain.Common.Enums;
 using ArtemisBankingPro.Core.Domain.Entities;
 using Mapster;
@@ -19,6 +20,14 @@ namespace ArtemisBankingPro.Core.Application.Mappings.EntitiesDtos
                 .Map(dest => dest.ClientFullName, src => string.Empty);
 
             config.NewConfig<AssignLoanDto, Loan>()
+                .Map(dest => dest.CreatedByAdminId, src => src.AdminId)
+                .Ignore(dest => dest.LoanNumber)
+                .Ignore(dest => dest.PendingAmount)
+                .Ignore(dest => dest.Status)
+                .Ignore(dest => dest.CreatedAt)
+                .Ignore(dest => dest.Installments);
+
+            config.NewConfig<AssignLoanCommand, Loan>()
                 .Map(dest => dest.CreatedByAdminId, src => src.AdminId)
                 .Ignore(dest => dest.LoanNumber)
                 .Ignore(dest => dest.PendingAmount)
