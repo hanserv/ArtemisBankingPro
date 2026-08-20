@@ -18,20 +18,17 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.ChangeSt
         /// <example>true</example>
         [SwaggerParameter(Description = "New status of the commerce. true for active, false for inactive.")]
         public required bool Status { get; set; }
-
-        [System.Text.Json.Serialization.JsonIgnore]
-        public string AdminId { get; set; } = string.Empty;
     }
 
     public class ChangeCommerceStatusCommandHandler : IRequestHandler<ChangeCommerceStatusCommand>
     {
         private readonly ICommerceRepository _commerceRepository;
-        private readonly IAccountServiceForApi _accountService;
+        private readonly IBasicUserInfoService _basicUserInfoService;
 
-        public ChangeCommerceStatusCommandHandler(ICommerceRepository commerceRepository, IAccountServiceForApi accountService)
+        public ChangeCommerceStatusCommandHandler(ICommerceRepository commerceRepository, IBasicUserInfoService basicUserInfoService)
         {
             _commerceRepository = commerceRepository;
-            _accountService = accountService;
+            _basicUserInfoService = basicUserInfoService;
         }
 
         public async Task Handle(ChangeCommerceStatusCommand request, CancellationToken cancellationToken)
@@ -48,7 +45,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.ChangeSt
 
             if (!request.Status && !string.IsNullOrWhiteSpace(commerce.AssociatedUserId))
             {
-                await _accountService.ChangeUserStatusAsync(commerce.AssociatedUserId, false, request.AdminId);
+                await _basicUserInfoService.DeactivateUserAsync(commerce.AssociatedUserId);
             }
         }
     }

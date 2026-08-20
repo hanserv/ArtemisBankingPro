@@ -44,6 +44,9 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+await app.Services.RunDatabaseInitializationAsync();
+await app.Services.RunIdentityDatabaseInitializationAsync();
 await app.Services.RunIdentitySeedAsync();
 
 // Configure the HTTP request pipeline.

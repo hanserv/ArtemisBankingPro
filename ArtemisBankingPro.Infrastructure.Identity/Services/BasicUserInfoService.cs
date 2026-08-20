@@ -4,16 +4,19 @@ using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ArtemisBankingPro.Infrastructure.Identity.Services
 {
     public class BasicUserInfoService : IBasicUserInfoService
     {
         private readonly UserManager<AppUser> _userManager;
+        private readonly ILogger<BasicUserInfoService> _logger;
 
-        public BasicUserInfoService(UserManager<AppUser> userManager)
+        public BasicUserInfoService(UserManager<AppUser> userManager, ILogger<BasicUserInfoService> logger)
         {
             _userManager = userManager;
+            _logger = logger;
         }
 
         public async Task<string?> GetUserIdByIdentificationAsync(string identification)
@@ -117,6 +120,22 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
                 Email = user.Email!,
                 IsActive = user.IsActive
             };
+        }
+
+        public async Task DeactivateUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user is null)
+            {
+                _logger.LogWarning("Attempted to deactivate a non-existent user {UserId}.", userId);
+                return; 
+            }
+
+            user.IsActive = false;
+            await _userManager.UpdateAsync(user);
+
+            _logger.LogInformation("User {UserId} was deactivated as a result of its associated commerce being deactivated.", userId);
         }
     }
 }

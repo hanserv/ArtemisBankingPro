@@ -10,6 +10,7 @@ using ArtemisBankingPro.Infrastructure.Identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -181,13 +182,32 @@ namespace ArtemisBankingPro.Infrastructure.Identity
             await DefaultClientUser.SeedAsync(userManager,savingsAccountService);
         }
 
+        public static async Task RunIdentityDatabaseInitializationAsync(this IServiceProvider service)
+        {
+            using var scope = service.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+            if (configuration.GetValue<bool>("UseInMemoryDatabase"))
+            {
+                await context.Database.EnsureCreatedAsync(); // SQLite in-memory
+            }
+            else
+            {
+                await context.Database.MigrateAsync(); // SQL Server
+            }
+        }
+
         #region Private Methods
         private static void GeneralConfiguration(IServiceCollection services, IConfiguration configuration)
         {
             #region Contexts
             if (configuration.GetValue<bool>("UseInMemoryDatabase"))
             {
-                services.AddDbContext<IdentityContext>(opt => opt.UseInMemoryDatabase("AppDb"));
+                var connection = new SqliteConnection("DataSource=:memory:");
+                connection.Open();
+
+                services.AddDbContext<IdentityContext>(opt => opt.UseSqlite(connection));
             }
             else
             {

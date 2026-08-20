@@ -96,7 +96,6 @@ namespace ArtemisBankingPro.Api.Controllers.v1
         )]
         public async Task<IActionResult> ChangeStatus(int id, ChangeCommerceStatusCommand command)
         {
-            command.AdminId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             command.Id = id;
             await Mediator.Send(command);
             return NoContent();

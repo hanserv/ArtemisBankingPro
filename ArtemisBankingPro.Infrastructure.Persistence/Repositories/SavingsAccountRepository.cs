@@ -29,7 +29,7 @@ namespace ArtemisBankingPro.Infrastructure.Persistence.Repositories
             return await _dbSet
                 .Where(a => a.ClientId == clientId && a.Status == SavingsAccountStatus.Active)
                 .OrderBy(a => a.Type == SavingsAccountType.Principal ? 0 : 1)
-                .ThenByDescending(a => a.Balance)
+                .ThenByDescending(a => (double)a.Balance)
                 .ToListAsync();
         }
     }

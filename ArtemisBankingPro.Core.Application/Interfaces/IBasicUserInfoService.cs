@@ -13,5 +13,6 @@ namespace ArtemisBankingPro.Core.Application.Interfaces
         Task<(int Active, int Inactive)> GetClientStatusCountsAsync();
         Task<HashSet<int>> GetCommerceIdsWithAssociatedUserAsync(IEnumerable<int> commerceIds);
         Task<CommerceAssociatedUserDto?> GetCommerceAssociatedUserInfoAsync(string userId);
+        Task DeactivateUserAsync(string userId);
     }
 }
