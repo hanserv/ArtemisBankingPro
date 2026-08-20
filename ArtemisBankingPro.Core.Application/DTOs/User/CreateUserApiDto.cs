@@ -1,11 +1,12 @@
-﻿using Swashbuckle.AspNetCore.Annotations;
+﻿using ArtemisBankingPro.Core.Domain.Common.Enums;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace ArtemisBankingPro.Core.Application.DTOs.User
 {
     /// <summary>
-    /// Common user fields shared across registration flows (WebApp and API).
+    /// Parameters required to create a new Administrator, Cashier or Client user.
     /// </summary>
-    public class RegisterDto
+    public class CreateUserApiDto
     {
         /// <example>Orison</example>
         [SwaggerParameter(Description = "The user's first name.")]
@@ -35,8 +36,12 @@ namespace ArtemisBankingPro.Core.Application.DTOs.User
         [SwaggerParameter(Description = "Must match the password field exactly.")]
         public required string ConfirmPassword { get; set; }
 
+        /// <example>Client</example>
+        [SwaggerParameter(Description = "The user's role. Allowed values: Admin, Cashier or Client. Cannot be used to create Commerce users.")]
+        public required UserType Role { get; set; }
+
         /// <example>5000.00</example>
-        [SwaggerParameter(Description = "Initial balance for the principal savings account. Defaults to RD$0.00 if not sent.")]
+        [SwaggerParameter(Description = "Initial balance for the principal savings account. Only applies when Role is Client. Defaults to RD$0.00 if not sent.")]
         public decimal? InitialAmount { get; set; }
     }
 }

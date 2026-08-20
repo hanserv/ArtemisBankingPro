@@ -6,7 +6,6 @@ using ArtemisBankingPro.Core.Application.DTOs;
 using ArtemisBankingPro.Core.Application.DTOs.Email;
 using ArtemisBankingPro.Core.Application.DTOs.User;
 using ArtemisBankingPro.Core.Application.Interfaces;
-using ArtemisBankingPro.Core.Application.Services;
 using ArtemisBankingPro.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -34,34 +33,34 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             _financialSummaryService = financialSummaryService;
         }
 
-        public virtual async Task<Result<PagedResult<UserDto>>> GetAllUsersAsync(int page, int pageSize, string? role)
+        public virtual async Task<Result<PagedResult<UserDto>>> GetAllUsersAsync(UserFilterDto filter)
         {
-            if (page <= 0)
+            if (filter.Page <= 0)
             {
                 return Result<PagedResult<UserDto>>.Failure(error: "The page parameter must be greater than zero.");
             }
 
-            if (pageSize <= 0)
+            if (filter.PageSize <= 0)
             {
                 return Result<PagedResult<UserDto>>.Failure(error: "The pageSize parameter must be greater than zero.");
             }
 
-            if (pageSize > 20)
+            if (filter.PageSize > 20)
             {
-                pageSize = 20;
+                filter.PageSize = 20;
             }
 
             var validRoles = new[] { "Admin", "Cashier", "Client" };
-            if (role is not null && !validRoles.Contains(role))
+            if (filter.Role is not null && !validRoles.Contains(filter.Role.ToString()))
             {
                 return Result<PagedResult<UserDto>>.Failure(error: "The role parameter must be Admin, Cashier or Client.");
             }
 
             var users = new List<AppUser>();
 
-            if (role is not null)
+            if (filter.Role is not null)
             {
-                users = (await _userManager.GetUsersInRoleAsync(role)).ToList();
+                users = (await _userManager.GetUsersInRoleAsync(filter.Role.ToString()!)).ToList();
             }
             else
             {
@@ -76,8 +75,8 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
             var pagedUsers = users
                     .OrderByDescending(u => u.CreatedAt)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
+                    .Skip((filter.Page - 1) * filter.PageSize)
+                    .Take(filter.PageSize)
                     .ToList();
 
             var items = new List<UserDto>();
@@ -102,8 +101,8 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             return Result<PagedResult<UserDto>>.Success(new PagedResult<UserDto>
             {
                 Items = items,
-                Page = page,
-                PageSize = pageSize,
+                Page = filter.Page,
+                PageSize = filter.PageSize,
                 TotalRecords = totalRecords
             });
         }
@@ -222,13 +221,10 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             var responseDto = new RegisterResponseDto
             {
                 Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
                 UserName = user.UserName,
                 Email = user.Email,
-                Identification = user.Identification,
-                IsActive = user.IsActive,
-                Role = role
+                Role = role,
+                IsActive = user.IsActive
             };
 
             return Result<RegisterResponseDto>.Success(responseDto, message: $"The {role} has been created successfully.");
@@ -579,13 +575,11 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
 
         private async Task SendActivationEmailAsync(AppUser user, string? origin, bool isApi)
         {
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var rawToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
             if (isApi)
             {
-                var compositeToken = $"{user.Id}|{token}";
-
+                var compositeToken = $"{user.Id}|{rawToken}";
                 var encodedComposite = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(compositeToken));
 
                 await _emailService.SendAsync(new EmailRequestDto
@@ -603,7 +597,9 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
                 return;
             }
 
+            var token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(rawToken));
             var activationUri = BuildActivationUri(user, token, origin ?? string.Empty);
+
             await _emailService.SendAsync(new EmailRequestDto
             {
                 To = user.Email!,

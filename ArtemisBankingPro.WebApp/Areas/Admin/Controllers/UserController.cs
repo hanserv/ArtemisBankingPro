@@ -24,12 +24,14 @@ namespace ArtemisBankingPro.WebApp.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index(UserFilterViewModel filter)
         {
-            var result = await _accountService.GetAllUsersAsync(filter.Page, pageSize: 20, filter.Role?.ToString());
+            var filterDto = _mapper.Map<UserFilterDto>(filter);
+
+            var result = await _accountService.GetAllUsersAsync(filterDto);
 
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = result.Error;
-                return RedirectToRoute(new { area = "Admin", controller = "Home", action = "Index" });
+                return RedirectToRoute(new { area = "Admin", controller = "Users", action = "Index" });
             }
 
             var vm = new UserListViewModel

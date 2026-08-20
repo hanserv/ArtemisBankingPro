@@ -4,7 +4,8 @@ namespace ArtemisBankingPro.Core.Application.ViewModels.User
 {
     public class UserFilterViewModel
     {
-        public UserType? Role { get; set; }
         public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
+        public UserType? Role { get; set; }
     }
 }

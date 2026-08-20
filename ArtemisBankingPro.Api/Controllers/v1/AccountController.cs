@@ -18,7 +18,7 @@ namespace ArtemisBankingPro.Api.Controllers.v1
         }
 
         [HttpPost("login")]
-        [ProducesResponseType(typeof(LoginResponseForApiDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginResponseForApiDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -49,11 +49,17 @@ namespace ArtemisBankingPro.Api.Controllers.v1
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
             Summary = "Get password reset token",
-            Description = "Generates a password reset token for the user"
+            Description = "Generates a password reset token for a user with role admin or commerce"
         )]
         public async Task<IActionResult> GetResetToken([FromBody] RequestPasswordResetDto dto)
         {
-            await _accountService.RequestPasswordResetAsync(dto,"",isApi:true);
+            var result = await _accountService.RequestPasswordResetAsync(dto,"",isApi:true);
+
+            if(!result.IsSuccess)
+            {
+                return BadRequest(new { error = result.Error });
+            }
+
             return NoContent();
         }
 

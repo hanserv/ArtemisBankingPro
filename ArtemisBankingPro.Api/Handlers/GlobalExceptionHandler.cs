@@ -46,7 +46,7 @@ namespace ArtemisBankingPro.Api.Handlers
                     }
                     break;
 
-                case ArtemisBankingPro.Core.Application.Exceptions.ValidationException validationException:
+                case ValidationException validationException:
                     exceptionTitle = "Bad Request";
                     details = string.Join(", ", validationException.Errors);
                     httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;

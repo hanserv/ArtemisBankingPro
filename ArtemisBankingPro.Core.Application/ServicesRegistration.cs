@@ -1,8 +1,11 @@
 ﻿using System.Reflection;
+using ArtemisBankingPro.Core.Application.Behaviors;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Core.Application.Services;
+using FluentValidation;
 using Mapster;
 using MapsterMapper;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArtemisBankingPro.Core.Application
@@ -17,6 +20,10 @@ namespace ArtemisBankingPro.Core.Application
 
             services.AddSingleton(config);
             services.AddScoped<IMapper, ServiceMapper>();
+
+            services.AddMediatR(opt => opt.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             #endregion
 
             #region Services

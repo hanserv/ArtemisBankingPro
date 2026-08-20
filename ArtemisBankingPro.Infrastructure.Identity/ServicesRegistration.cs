@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using ArtemisBankingPro.Core.Application;
 using ArtemisBankingPro.Core.Application.Interfaces;
+using ArtemisBankingPro.Core.Domain.Interfaces;
 using ArtemisBankingPro.Core.Domain.Settings;
 using ArtemisBankingPro.Infrastructure.Identity.Contexts;
 using ArtemisBankingPro.Infrastructure.Identity.Entities;
@@ -171,10 +172,11 @@ namespace ArtemisBankingPro.Infrastructure.Identity
             var userManager = servicesProvider.GetRequiredService<UserManager<AppUser>>();
             var roleManager = servicesProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var savingsAccountService = servicesProvider.GetRequiredService<ISavingsAccountService>();
+            var commerceRepository = servicesProvider.GetRequiredService<ICommerceRepository>();
 
             await DefaultRoles.SeedAsync(roleManager);
             await DefaultAdminUser.SeedAsync(userManager);
-            await DefaultCommerceUser.SeedAsync(userManager);
+            await DefaultCommerceUser.SeedAsync(userManager, commerceRepository, savingsAccountService);
             await DefaultCashierUser.SeedAsync(userManager);
             await DefaultClientUser.SeedAsync(userManager,savingsAccountService);
         }
