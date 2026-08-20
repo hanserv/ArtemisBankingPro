@@ -23,6 +23,8 @@ namespace ArtemisBankingPro.Core.Application.Features.Loan.Commands.ModifyRate
         /// <example>10.50</example>
         [SwaggerParameter(Description = "The new annual interest rate to apply to the loan.")]
         public required decimal AnnualInterestRate { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
         public string AdminId { get; set; } = string.Empty;
     }
 

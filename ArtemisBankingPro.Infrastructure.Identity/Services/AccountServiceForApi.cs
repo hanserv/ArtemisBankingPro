@@ -10,6 +10,7 @@ using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Core.Domain.Interfaces;
 using ArtemisBankingPro.Core.Domain.Settings;
 using ArtemisBankingPro.Infrastructure.Identity.Entities;
+using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -25,16 +26,18 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ICommerceRepository _commerceRepository;
         private readonly ISavingsAccountRepository _savingsAccountRepository;
+        private readonly IMapper _mapper;
 
         public AccountServiceForApi(UserManager<AppUser> userManager, IEmailService emailService,
             ISavingsAccountService savingsAccountService, ILogger<BaseAccountService> logger,
-            IFinancialSummaryService financialSummaryService, IOptions<JwtSettings> jwtSettings, SignInManager<AppUser> signInManager, ICommerceRepository commerceRepository, ISavingsAccountRepository savingsAccountRepository)
+            IFinancialSummaryService financialSummaryService, IOptions<JwtSettings> jwtSettings, SignInManager<AppUser> signInManager, ICommerceRepository commerceRepository, ISavingsAccountRepository savingsAccountRepository, IMapper mapper)
             : base(userManager, emailService, savingsAccountService, logger, financialSummaryService)
         {
             _jwtSettings = jwtSettings.Value;
             _signInManager = signInManager;
             _commerceRepository = commerceRepository;
             _savingsAccountRepository = savingsAccountRepository;
+            _mapper = mapper;
         }
 
         public async Task<LoginResponseForApiDto> AuthenticateAsync(LoginDto loginDto)
@@ -252,15 +255,8 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
                 throw new ApiException("The selected user does not have a main account.", (int)HttpStatusCode.Forbidden);
             }
 
-            var mainAccountDto = new SavingsAccountDto
-            {
-                Id = userMainAccount.Id,
-                AccountNumber = userMainAccount.AccountNumber,
-                Balance = userMainAccount.Balance,
-                ClientFullName = $"{user.FirstName} {user.LastName}",
-                Status = userMainAccount.Status,
-                Type = userMainAccount.Type
-            };
+            var mainAccountDto = _mapper.Map<SavingsAccountDto>(userMainAccount);
+            mainAccountDto.ClientFullName = $"{user.FirstName} {user.LastName}";
 
             return new UserDetailDto
             {

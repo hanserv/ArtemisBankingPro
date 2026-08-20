@@ -27,6 +27,7 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Assign
         [SwaggerParameter(Description = "Approved credit limit for the card.")]
         public required decimal CreditLimit { get; set; }
 
+        [System.Text.Json.Serialization.JsonIgnore]
         public string AdminId { get; set; } = string.Empty;
     }
 

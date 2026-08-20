@@ -1,4 +1,5 @@
-﻿using ArtemisBankingPro.Core.Application.DTOs.User;
+﻿using ArtemisBankingPro.Core.Application.DTOs.Commerce;
+using ArtemisBankingPro.Core.Application.DTOs.User;
 using ArtemisBankingPro.Core.Application.Interfaces;
 using ArtemisBankingPro.Infrastructure.Identity.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -87,6 +88,35 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
         {
             var clients = await _userManager.GetUsersInRoleAsync("Client");
             return (clients.Count(c => c.IsActive), clients.Count(c => !c.IsActive));
+        }
+
+        public async Task<HashSet<int>> GetCommerceIdsWithAssociatedUserAsync(IEnumerable<int> commerceIds)
+        {
+            var ids = commerceIds.ToList();
+
+            return (await _userManager.Users
+                .Where(u => u.CommerceId != null && ids.Contains(u.CommerceId.Value))
+                .Select(u => u.CommerceId!.Value)
+                .ToListAsync())
+                .ToHashSet();
+        }
+
+        public async Task<CommerceAssociatedUserDto?> GetCommerceAssociatedUserInfoAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            
+            if (user is null)
+            {
+                return null;
+            }
+
+            return new CommerceAssociatedUserDto
+            {
+                Id = user.Id,
+                UserName = user.UserName!,
+                Email = user.Email!,
+                IsActive = user.IsActive
+            };
         }
     }
 }

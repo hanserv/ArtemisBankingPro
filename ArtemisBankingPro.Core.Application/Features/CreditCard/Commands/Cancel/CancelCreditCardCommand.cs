@@ -13,6 +13,7 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Cancel
     public class CancelCreditCardCommand : IRequest
     {
         public int CreditCardId { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
         public string AdminId { get; set; } = string.Empty;
     }
 

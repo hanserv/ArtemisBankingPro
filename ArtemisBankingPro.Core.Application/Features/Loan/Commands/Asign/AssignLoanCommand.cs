@@ -40,6 +40,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Loan.Commands.Asign
         [SwaggerParameter(Description = "Confirms the assignment even if the client is or becomes high-risk.")]
         public bool ConfirmHighRisk { get; set; } = false;
 
+        [System.Text.Json.Serialization.JsonIgnore]
         public string AdminId { get; set; } = string.Empty;
     }
 
