@@ -284,13 +284,21 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             {
                 rolesClaims.Add(new Claim(ClaimTypes.Role, role));
             }
-            var claims = new[]
+
+            var baseClaims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub,user.UserName ?? ""),
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName ?? ""),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
-                new Claim("uid",user.Id ?? "")
-            }.Union(userClaims).Union(rolesClaims);
+                new Claim("uid", user.Id ?? "")
+            };
+
+            if (user.CommerceId is not null)
+            {
+                baseClaims.Add(new Claim("commerceId", user.CommerceId.Value.ToString()));
+            }
+
+            var claims = baseClaims.Union(userClaims).Union(rolesClaims);
 
             var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);

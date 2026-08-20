@@ -122,6 +122,12 @@ namespace ArtemisBankingPro.Infrastructure.Identity.Services
             };
         }
 
+        public async Task<string?> GetUserIdByCommerceIdAsync(int commerceId)
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.CommerceId == commerceId);
+            return user?.Id;
+        }
+
         public async Task DeactivateUserAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);

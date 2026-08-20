@@ -10,6 +10,7 @@
         LoanPayment = 6,
         CreditCardPayment = 7,
         CashAdvance = 8,
-        LoanDisbursement = 9
+        LoanDisbursement = 9,
+        HermesPayment = 10
     }
 }
