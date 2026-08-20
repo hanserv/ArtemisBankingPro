@@ -28,9 +28,4 @@
     <ProjectReference Include="..\ArtemisBankingPro.Core.Domain\ArtemisBankingPro.Core.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Features\SavingsAccount\Commands\" />
-    <Folder Include="Features\SavingsAccount\Queries\" />
-  </ItemGroup>
-
 </Project>

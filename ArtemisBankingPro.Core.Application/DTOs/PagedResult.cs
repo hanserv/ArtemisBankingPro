@@ -2,6 +2,7 @@
 {
     public class PagedResult<T>
     {
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
         public required List<T> Items { get; set; }
         public required int Page { get; set; }
         public required int PageSize { get; set; }
