@@ -15,11 +15,9 @@ namespace ArtemisBankingPro.Core.Application.Features.HermesPay.Commands.Process
     /// <summary>
     /// Parameters required to process a credit card payment in favor of a commerce.
     /// </summary>
-    public class ProcessCommercePaymentCommand : IRequest
+    public class ProcessCommercePaymentCommand : IRequest<Unit>
     {
-        [BindNever]
         public int CommerceId { get; set; }
-        [BindNever]
         public string PerformedByUserId { get; set; } = string.Empty;
 
         /// <example>1589963258467598</example>
@@ -43,7 +41,7 @@ namespace ArtemisBankingPro.Core.Application.Features.HermesPay.Commands.Process
         public required decimal TransactionAmount { get; set; }
     }
 
-    public class ProcessCommercePaymentCommandHandler : IRequestHandler<ProcessCommercePaymentCommand>
+    public class ProcessCommercePaymentCommandHandler : IRequestHandler<ProcessCommercePaymentCommand, Unit>
     {
         private readonly ICreditCardRepository _creditCardRepository;
         private readonly ICommerceRepository _commerceRepository;
@@ -72,7 +70,7 @@ namespace ArtemisBankingPro.Core.Application.Features.HermesPay.Commands.Process
             _logger = logger;
         }
 
-        public async Task Handle(ProcessCommercePaymentCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(ProcessCommercePaymentCommand request, CancellationToken cancellationToken)
         {
             var commerce = await _commerceRepository.GetByIdAsync(request.CommerceId);
             if (commerce is null)
@@ -148,6 +146,7 @@ namespace ArtemisBankingPro.Core.Application.Features.HermesPay.Commands.Process
 
             await TrySendCardHolderEmailAsync(card, commerce, request.TransactionAmount);
             await TrySendCommerceEmailAsync(commerce, card, request.TransactionAmount);
+            return Unit.Value;
         }
 
         #region Private Methods

@@ -4,6 +4,7 @@ using ArtemisBankingPro.Core.Application.Exceptions;
 using ArtemisBankingPro.Core.Domain.Interfaces;
 using MapsterMapper;
 using MediatR;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -34,7 +35,6 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.Create
         [SwaggerParameter(Description = "Tax identifier (RNC) of the commerce.")]
         public required string Rnc { get; set; }
 
-        [System.Text.Json.Serialization.JsonIgnore]
         public string AdminId { get; set; } = string.Empty;
     }
 

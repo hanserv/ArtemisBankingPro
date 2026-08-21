@@ -34,7 +34,7 @@ namespace ArtemisBankingPro.Api.Controllers.v1
             return Ok(commerces);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CommerceDetailsDto))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -66,7 +66,7 @@ namespace ArtemisBankingPro.Api.Controllers.v1
             return CreatedAtAction(nameof(GetById), new { id = commerce.Id }, commerce);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -84,7 +84,7 @@ namespace ArtemisBankingPro.Api.Controllers.v1
             return NoContent();
         }
 
-        [HttpPatch("{id}/status")]
+        [HttpPatch("{id:int}/status")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

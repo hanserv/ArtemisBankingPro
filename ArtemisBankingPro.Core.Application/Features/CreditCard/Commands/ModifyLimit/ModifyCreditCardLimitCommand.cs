@@ -12,7 +12,7 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Modify
     /// <summary>
     /// Parameters required to modify a credit card's credit limit.
     /// </summary>
-    public class ModifyCreditCardLimitCommand : IRequest
+    public class ModifyCreditCardLimitCommand : IRequest<Unit>
     {
         public int CreditCardId { get; set; }
 
@@ -23,7 +23,7 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Modify
         public string AdminId { get; set; } = string.Empty;
     }
 
-    public class ModifyCreditCardLimitCommandHandler : IRequestHandler<ModifyCreditCardLimitCommand>
+    public class ModifyCreditCardLimitCommandHandler : IRequestHandler<ModifyCreditCardLimitCommand, Unit>
     {
         private readonly ICreditCardRepository _creditCardRepository;
         private readonly IBasicUserInfoService _basicUserInfoService;
@@ -42,7 +42,7 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Modify
             _logger = logger;
         }
 
-        public async Task Handle(ModifyCreditCardLimitCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(ModifyCreditCardLimitCommand request, CancellationToken cancellationToken)
         {
             var card = await _creditCardRepository.GetByIdAsync(request.CreditCardId);
             if (card is null)
@@ -63,6 +63,8 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Modify
                 _logger.LogWarning("Credit limit for card ending in {LastFourDigits} was updated, but the notification email could not be sent.",
                     card.CardNumber[^4..]);
             }
+
+            return Unit.Value;
         }
 
         #region Private Methods

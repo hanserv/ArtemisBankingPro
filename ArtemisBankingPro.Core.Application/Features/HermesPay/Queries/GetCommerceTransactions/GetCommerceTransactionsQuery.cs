@@ -16,7 +16,6 @@ namespace ArtemisBankingPro.Core.Application.Features.HermesPay.Queries.GetComme
     /// </summary>
     public class GetCommerceTransactionsQuery : IRequest<CommerceTransactionsResponseDto>
     {
-        [BindNever]
         public int CommerceId { get; set; }
 
         /// <example>1</example>
@@ -46,6 +45,11 @@ namespace ArtemisBankingPro.Core.Application.Features.HermesPay.Queries.GetComme
 
         public async Task<CommerceTransactionsResponseDto> Handle(GetCommerceTransactionsQuery request, CancellationToken cancellationToken)
         {
+            if (request.PageSize > 20)
+            {
+                request.PageSize = 20;
+            }
+
             var commerce = await _commerceRepository.GetByIdAsync(request.CommerceId);
             if (commerce is null)
             {

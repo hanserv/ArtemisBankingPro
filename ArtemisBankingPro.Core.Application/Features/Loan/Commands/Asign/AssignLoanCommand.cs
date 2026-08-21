@@ -128,7 +128,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Loan.Commands.Asign
                     Amount = request.CapitalAmount,
                     Type = TransactionType.Credit,
                     Category = TransactionCategory.LoanDisbursement,
-                    Origin = $"Loan {loanNumber}",
+                    Origin = $"{loanNumber}",
                     Beneficiary = principalAccount.AccountNumber,
                     Status = TransactionStatus.Approved,
                     PerformedByUserId = request.AdminId,

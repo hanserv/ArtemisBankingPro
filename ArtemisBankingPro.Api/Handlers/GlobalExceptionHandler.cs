@@ -70,15 +70,21 @@ namespace ArtemisBankingPro.Api.Handlers
                     }
                     break;
 
-                case ValidationException validationException:
-                    exceptionTitle = "Bad Request";
-                    details = string.Join(", ", validationException.Errors);
-                    httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    break;
+                //case ValidationException validationException:
+                //    exceptionTitle = "Bad Request";
+                //    details = string.Join(", ", validationException.Errors);
+                //    httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                //    break;
 
                 case KeyNotFoundException:
                     exceptionTitle = "Not Found";
                     httpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                    break;
+
+                case ArtemisBankingPro.Core.Application.Exceptions.ValidationException:
+                    exceptionTitle = "Bad Request";
+                    details = ((ArtemisBankingPro.Core.Application.Exceptions.ValidationException)exception).Errors.Aggregate((a, b) => a + ", " + b);
+                    httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
 
                 case UnauthorizedAccessException:

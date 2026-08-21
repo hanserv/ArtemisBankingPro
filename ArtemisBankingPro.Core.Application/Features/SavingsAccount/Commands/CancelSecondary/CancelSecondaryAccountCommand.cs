@@ -8,13 +8,13 @@ using Microsoft.Extensions.Logging;
 
 namespace ArtemisBankingPro.Core.Application.Features.SavingsAccount.Commands.CancelSecondary
 {
-    public class CancelSecondaryAccountCommand : IRequest
+    public class CancelSecondaryAccountCommand : IRequest<Unit>
     {
         public string AccountNumber { get; set; } = string.Empty;
         public string PerformedByAdminId { get; set; } = string.Empty;
     }
 
-    public class CancelSecondaryAccountCommandHandler : IRequestHandler<CancelSecondaryAccountCommand>
+    public class CancelSecondaryAccountCommandHandler : IRequestHandler<CancelSecondaryAccountCommand, Unit>
     {
         private readonly ISavingsAccountRepository _savingsAccountRepository;
         private readonly ITransactionRepository _transactionRepository;
@@ -30,7 +30,7 @@ namespace ArtemisBankingPro.Core.Application.Features.SavingsAccount.Commands.Ca
             _logger = logger;
         }
 
-        public async Task Handle(CancelSecondaryAccountCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(CancelSecondaryAccountCommand request, CancellationToken cancellationToken)
         {
             var account = await _savingsAccountRepository.GetByAccountNumberAsync(request.AccountNumber);
             if (account is null)
@@ -107,6 +107,7 @@ namespace ArtemisBankingPro.Core.Application.Features.SavingsAccount.Commands.Ca
             }
 
             _logger.LogInformation("Secondary account {AccountNumber} cancelled by administrator {AdminId}.", account.AccountNumber, request.PerformedByAdminId);
+            return Unit.Value;
         }
     }
 }

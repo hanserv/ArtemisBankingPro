@@ -19,4 +19,8 @@
   <Folder Name="/Source/Presentation/WebApp/">
     <Project Path="ArtemisBankingPro.WebApp/ArtemisBankingPro.WebApp.csproj" Id="d38cb162-512b-4657-870c-198b73a93747" />
   </Folder>
+  <Folder Name="/Source/Tests/">
+    <Project Path="ArtemisBankingPro.Tests.Integration/ArtemisBankingPro.Tests.Integration.csproj" Id="d4080d08-0248-4f62-8867-1285ee63addc" />
+    <Project Path="ArtemisBankingPro.Tests.Unit/ArtemisBankingPro.Tests.Unit.csproj" Id="9c04c97d-495c-4066-90d2-8887ff4bebad" />
+  </Folder>
 </Solution>

@@ -10,7 +10,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.Update
     /// <summary>
     /// Parameters required to update an existing commerce.
     /// </summary>
-    public class UpdateCommerceCommand : IRequest
+    public class UpdateCommerceCommand : IRequest<Unit>
     {
         public int Id { get; set; }
 
@@ -35,7 +35,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.Update
         public required string Rnc { get; set; }
     }
 
-    public class UpdateCommerceCommandHandler : IRequestHandler<UpdateCommerceCommand>
+    public class UpdateCommerceCommandHandler : IRequestHandler<UpdateCommerceCommand, Unit>
     {
         private readonly ICommerceRepository _commerceRepository;
 
@@ -44,7 +44,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.Update
             _commerceRepository = commerceRepository;
         }
 
-        public async Task Handle(UpdateCommerceCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(UpdateCommerceCommand request, CancellationToken cancellationToken)
         {
             var commerce = await _commerceRepository.GetByIdAsync(request.Id);
 
@@ -76,6 +76,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.Update
             commerce.Rnc = request.Rnc;
 
             await _commerceRepository.UpdateAsync(commerce);
+            return Unit.Value;
         }
     }
 }

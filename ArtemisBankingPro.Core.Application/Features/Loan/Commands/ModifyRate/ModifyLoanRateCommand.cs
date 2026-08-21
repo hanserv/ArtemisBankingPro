@@ -16,7 +16,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Loan.Commands.ModifyRate
     /// <summary>
     /// Parameters required to modify a loan's annual interest rate
     /// </summary>
-    public class ModifyLoanRateCommand : IRequest
+    public class ModifyLoanRateCommand : IRequest<Unit>
     {
         public int LoanId { get; set; }
 
@@ -28,7 +28,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Loan.Commands.ModifyRate
         public string AdminId { get; set; } = string.Empty;
     }
 
-    public class ModifyLoanRateCommandHandler : IRequestHandler<ModifyLoanRateCommand>
+    public class ModifyLoanRateCommandHandler : IRequestHandler<ModifyLoanRateCommand, Unit>
     {
         private readonly ILoanRepository _loanRepository;
         private readonly IBasicUserInfoService _basicUserInfoService;
@@ -44,7 +44,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Loan.Commands.ModifyRate
             _logger = logger;
         }
 
-        public async Task Handle(ModifyLoanRateCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(ModifyLoanRateCommand request, CancellationToken cancellationToken)
         {
             var loan = await _loanRepository.GetAllQueryInclude(["Installments"])
                 .FirstOrDefaultAsync(l => l.Id == request.LoanId, cancellationToken);
@@ -77,6 +77,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Loan.Commands.ModifyRate
                 loan.LoanNumber, request.AnnualInterestRate, request.AdminId, eligibleInstallments.Count);
 
             await TrySendRateUpdateEmailAsync(loan, eligibleInstallments[0]);
+            return Unit.Value;
         }
 
         #region Private Methods

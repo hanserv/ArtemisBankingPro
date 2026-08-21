@@ -10,14 +10,14 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Cancel
     /// <summary>
     /// Parameters required to cancel a credit card.
     /// </summary>
-    public class CancelCreditCardCommand : IRequest
+    public class CancelCreditCardCommand : IRequest<Unit>
     {
         public int CreditCardId { get; set; }
         [System.Text.Json.Serialization.JsonIgnore]
         public string AdminId { get; set; } = string.Empty;
     }
 
-    public class CancelCreditCardCommandHandler : IRequestHandler<CancelCreditCardCommand>
+    public class CancelCreditCardCommandHandler : IRequestHandler<CancelCreditCardCommand, Unit>
     {
         private readonly ICreditCardRepository _creditCardRepository;
         private readonly ILogger<CancelCreditCardCommandHandler> _logger;
@@ -28,7 +28,7 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Cancel
             _logger = logger;
         }
 
-        public async Task Handle(CancelCreditCardCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(CancelCreditCardCommand request, CancellationToken cancellationToken)
         {
             var card = await _creditCardRepository.GetByIdAsync(request.CreditCardId);
             if (card is null)
@@ -41,6 +41,8 @@ namespace ArtemisBankingPro.Core.Application.Features.CreditCard.Commands.Cancel
 
             _logger.LogInformation("Credit card ending in {LastFourDigits} cancelled by administrator {AdminId}.",
                 card.CardNumber[^4..], request.AdminId);
+
+            return Unit.Value;
         }
     }
 }

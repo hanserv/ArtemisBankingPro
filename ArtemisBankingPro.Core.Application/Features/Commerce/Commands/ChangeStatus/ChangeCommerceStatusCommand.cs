@@ -11,7 +11,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.ChangeSt
     /// <summary>
     /// Parameters required to change a commerce's status.
     /// </summary>
-    public class ChangeCommerceStatusCommand : IRequest
+    public class ChangeCommerceStatusCommand : IRequest<Unit>
     {
         public int Id { get; set; }
 
@@ -20,7 +20,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.ChangeSt
         public required bool Status { get; set; }
     }
 
-    public class ChangeCommerceStatusCommandHandler : IRequestHandler<ChangeCommerceStatusCommand>
+    public class ChangeCommerceStatusCommandHandler : IRequestHandler<ChangeCommerceStatusCommand, Unit>
     {
         private readonly ICommerceRepository _commerceRepository;
         private readonly IBasicUserInfoService _basicUserInfoService;
@@ -31,7 +31,7 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.ChangeSt
             _basicUserInfoService = basicUserInfoService;
         }
 
-        public async Task Handle(ChangeCommerceStatusCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(ChangeCommerceStatusCommand request, CancellationToken cancellationToken)
         {
             var commerce = await _commerceRepository.GetByIdAsync(request.Id);
 
@@ -47,6 +47,8 @@ namespace ArtemisBankingPro.Core.Application.Features.Commerce.Commands.ChangeSt
             {
                 await _basicUserInfoService.DeactivateUserAsync(commerce.AssociatedUserId);
             }
+
+            return Unit.Value;
         }
     }
 }
